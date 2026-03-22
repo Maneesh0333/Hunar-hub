@@ -1,0 +1,83 @@
+import { useMemo, useState } from "react";
+import FilterChips from "../Shared/FilterChips";
+import Header from "../Shared/Header";
+import {
+  useBlockEntrepreneur,
+  useEntrepreneurs,
+  useUnblockEntrepreneur,
+} from "../../hooks/Admin/useEntrepreneurs";
+
+import { getChips } from "../../utils/entrepreneurFilters";
+import SearchInput from "../Shared/SearchInput";
+import Table from "../Shared/Table";
+import EntrepreneurRow from "./EntrepreneurRow";
+
+export default function Entrepreneurs() {
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [search, setSearch] = useState("");
+
+  const { data, isLoading, isError } = useEntrepreneurs(
+    activeFilter,
+    search,
+    "entrepreneurs",
+  );
+
+  const blockMutation = useBlockEntrepreneur();
+  const unblockMutation = useUnblockEntrepreneur();
+
+  if (isLoading) return <p>Loading...</p>;
+  if (isError) return <p>Error loading entrepreneurs</p>;
+
+  const entrepreneurs = data?.entrepreneurs ?? [];
+
+  const chips = useMemo(
+    () => [...getChips(data?.stats, data?.totalEntrepreneurs)].reverse(),
+    [data?.stats, data?.totalEntrepreneurs],
+  );
+
+  return (
+    <div className="flex-1 p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
+      <Header
+        title="Entrepreneur Applications"
+        description={`${data?.totalEntrepreneurs} total applications`}
+      />
+
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <FilterChips
+          chips={chips}
+          active={activeFilter}
+          onChange={setActiveFilter}
+        />
+
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search entrepreneur..."
+          className="w-70 max-lg:w-full"
+        />
+      </div>
+
+      <Table
+        headers={[
+          "Artisan",
+          "Category",
+          "City",
+          "Orders",
+          "Rating",
+          "Status",
+          "Actions",
+        ]}
+        data={entrepreneurs}
+        colSpan={7}
+        renderRow={(item) => (
+          <EntrepreneurRow
+            key={item._id}
+            item={item}
+            blockMutation={blockMutation}
+            unblockMutation={unblockMutation}
+          />
+        )}
+      />
+    </div>
+  );
+}
