@@ -21,7 +21,7 @@ import AdminOverview from "./components/Admin/AdminOverview.tsx";
 import EntrepreneurApplications from "./components/Admin/EntrepreneurApplications.tsx";
 import Category from "./components/Admin/Category.tsx";
 import Reviews from "./components/Admin/Reviews.tsx";
-import Orders from "./components/Admin/Orders.tsx";
+import Orders from "./components/Admin/AdminBookingPage.tsx";
 import Complaints from "./components/Admin/Complaints.tsx";
 import User from "./pages/User.tsx";
 import UserHomePage from "./pages/UserHomePage.tsx";
@@ -34,6 +34,9 @@ import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import RoleRedirect from "./components/Auth/RoleRedirect.tsx";
 import Entrepreneur from "./pages/Entrepreneur.tsx";
 import Services from "./components/Entrepreneur/Services.tsx";
+import ChatDemo from "./components/Shared/ChatDemo.tsx";
+import ErrorPage from "./pages/ErrorPage.tsx";
+import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +44,10 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "/chatDemo",
+    element: <ChatDemo />,
   },
   {
     path: "/redirect",
@@ -60,7 +67,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/user",
-    element: <User />,
+    element: (
+      <ProtectedRoute requiredRole="User">
+        <User />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -75,8 +86,16 @@ const router = createBrowserRouter([
         element: <MyOrders />,
       },
       {
+        path: "chat",
+        element: <Chat />,
+      },
+      {
         path: "wishlist",
         element: <Wishlist />,
+      },
+      {
+        path: "*",
+        element: <NotFound />,
       },
     ],
   },
@@ -115,10 +134,15 @@ const router = createBrowserRouter([
       {
         path: "profile",
         element: <Profile />,
+        errorElement: <ErrorPage />,
       },
       {
         path: "schedule",
         element: <Schedule />,
+      },
+      {
+        path: "*",
+        element: <NotFound />,
       },
     ],
   },
@@ -170,7 +194,15 @@ const router = createBrowserRouter([
         path: "reports",
         element: <>Reports</>,
       },
+      {
+        path: "*",
+        element: <NotFound />,
+      },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 

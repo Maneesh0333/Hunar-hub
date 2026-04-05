@@ -33,16 +33,22 @@ const entrepreneurSchema = new mongoose.Schema(
       type: [
         {
           type: String,
-          enum: ["Cash", "UPI", "Card", "Bank Transfer"],
+          enum: ["Cash", "UPI"],
         },
       ],
       default: [],
       validate: [
-        (arr) => arr.length <= 5,
-        "Max 5 payment methods",
+        (arr) => arr.length <= 2,
+        "Max 2 payment methods",
         (arr) => new Set(arr).size === arr.length,
         "Duplicate payment methods not allowed",
       ],
+    },
+
+    visitType: {
+      type: [String],
+      enum: ["visit_home", "visit_workshop"],
+      default: ["visit_workshop"],
     },
 
     category: {

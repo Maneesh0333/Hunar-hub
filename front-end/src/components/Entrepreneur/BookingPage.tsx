@@ -6,7 +6,8 @@ import Table from "../Shared/Table";
 
 import BookingRow from "./BookingRow";
 import { useBookings } from "../../hooks/Entrepreneur/useBookings";
-import { getChips } from "../../utils/entrepreneurFilters";
+import { getChips } from "../../utils/EntrepreneurFilters";
+import Spinner from "../Shared/Spinner";
 
 export default function BookingPage() {
   const [search, setSearch] = useState("");
@@ -21,7 +22,7 @@ export default function BookingPage() {
     [data?.stats, data?.totalBookings],
   );
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <Spinner />;
   if (isError) return <p>Error loading bookings</p>;
   return (
     <div className="flex-1 p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
@@ -51,13 +52,14 @@ export default function BookingPage() {
           "Service",
           "Price",
           "Visit Type",
+          "Requirements",
           "Payment Status",
           "Created",
           "Status",
           "Actions",
         ]}
         data={bookings}
-        colSpan={7}
+        colSpan={8}
         renderRow={(item) => <BookingRow key={item._id} item={item} />}
       />
     </div>

@@ -9,28 +9,8 @@ import EntrepreneurSchedule from "../models/EntrepreneurSchedule.model.js";
 import EntrepreneurAvailability from "../models/EntrepreneurAvailability.model.js";
 import minutesToTime from "../utils/MinutesToTime.js";
 import timeToMinutes from "../utils/TimeToMinutes.js";
-
-export const getDashboardStats = asyncHandler(async (req, res) => {
-  const { id } = req.user;
-
-  const entrepreneur = await Entrepreneur.findOne({
-    userId: id,
-  });
-
-  if (!entrepreneur) {
-    throw new AppError("Entrepreneur profile not found", 404);
-  }
-
-  res.status(200).json({
-    success: true,
-    data: {
-      totalOrders: entrepreneur.totalOrders,
-      completedOrders: entrepreneur.completedOrders,
-      rating: entrepreneur.rating,
-      verificationStatus: entrepreneur.verificationStatus,
-    },
-  });
-});
+import Review from "../models/Review.model.js";
+import Booking from "../models/Booking.model.js";
 
 export const getEntrepreneurProfile = asyncHandler(async (req, res) => {
   const { id } = req.user;
@@ -66,7 +46,7 @@ export const getEntrepreneurProfileById = asyncHandler(async (req, res) => {
     throw new AppError("Invalid ID", 400);
   }
 
-  const entrepreneur = await Entrepreneur.findById(id)
+  const entrepreneur = await Entrepreneur.findOne({ user: id })
     .populate([
       {
         path: "user",
@@ -351,7 +331,15 @@ export const saveAvailability = asyncHandler(async (req, res) => {
 });
 
 export const getSearchEntrepreneurProfile = asyncHandler(async (req, res) => {
-  const { search = "", category = "", page = 1, limit = 10 } = req.query;
+  const {
+    search = "",
+    category = "All",
+    rating = "Any",
+    availableToday,
+    homeService,
+    page = 1,
+    limit = 10,
+  } = req.query;
 
   const pageNum = Math.max(parseInt(page), 1);
   const limitNum = Math.max(parseInt(limit), 1);
@@ -372,11 +360,24 @@ export const getSearchEntrepreneurProfile = asyncHandler(async (req, res) => {
     ];
   }
 
-  if (category) {
-    match.category = new mongoose.Types.ObjectId(category);
+  if (category !== "All") {
+    match["category._id"] = new mongoose.Types.ObjectId(category);
+  }
+
+  
+  if (availableToday !== "false") {
+    match.isAvailableToday = true;
+  }
+
+  if (homeService !== "false") {
+    match.homeServiceAvailable = true;
   }
 
   const pipeline = [
+    ...(rating !== "Any"
+      ? [{ $match: { "rating.average": { $gte: parseInt(rating.charAt(0)) } } }]
+      : []),
+
     // 👤 User
     {
       $lookup: {
@@ -485,6 +486,7 @@ export const getSearchEntrepreneurProfile = asyncHandler(async (req, res) => {
       $addFields: {
         minPrice: "$minService.price",
         priceUnit: "$minService.priceUnit",
+        homeServiceAvailable: { $in: ["visit_home", "$visitType"] },
 
         isAvailableToday: {
           $and: [
@@ -515,7 +517,7 @@ export const getSearchEntrepreneurProfile = asyncHandler(async (req, res) => {
 
           {
             $project: {
-              _id: 1,
+              _id: "$user._id",
               bio: 1,
               skills: 1,
               city: "$user.city",
@@ -525,7 +527,7 @@ export const getSearchEntrepreneurProfile = asyncHandler(async (req, res) => {
               totalReviews: "$rating.totalReviews",
               minPrice: 1,
               priceUnit: 1,
-              isAvailableToday: 1,
+              isAvailableToday: 1
             },
           },
         ],
@@ -540,5 +542,422 @@ export const getSearchEntrepreneurProfile = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     data: result[0],
+  });
+});
+
+export const createReview = asyncHandler(async (req, res) => {
+  const { bookingId, rating, comment } = req.body;
+
+  /* ---------------- Validate ---------------- */
+
+  if (!rating || rating < 1 || rating > 5) {
+    throw new AppError("Rating must be between 1 and 5", 400);
+  }
+
+  const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+    throw new AppError("booking not found", 404);
+  }
+
+  const service = await Service.findById(booking.service);
+
+  if (!service) {
+    throw new AppError("Service not found", 404);
+  }
+
+  /* ---------------- Prevent Duplicate Review ---------------- */
+
+  const existingReview = await Review.findOne({
+    customer: req.user.id,
+    booking: bookingId,
+  });
+
+  if (existingReview) {
+    throw new AppError("You already reviewed this service", 400);
+  }
+
+  /* ---------------- Create Review ---------------- */
+
+  const review = await Review.create({
+    customer: req.user.id,
+    entrepreneur: service.entrepreneur,
+    service: booking.service,
+    booking: booking._id,
+    rating,
+    comment,
+  });
+
+  /* ---------------- Update Entrepreneur Rating ---------------- */
+
+  const stats = await Review.aggregate([
+    { $match: { entrepreneur: service.entrepreneur } },
+    {
+      $group: {
+        _id: "$entrepreneur",
+        avgRating: { $avg: "$rating" },
+        totalReviews: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const avgRating = stats[0]?.avgRating || 0;
+  const totalReviews = stats[0]?.totalReviews || 0;
+
+  await Entrepreneur.findByIdAndUpdate(service.entrepreneur, {
+    "rating.average": avgRating,
+    "rating.totalReviews": totalReviews,
+  });
+
+  /* ---------------- Response ---------------- */
+
+  res.status(201).json({
+    success: true,
+    message: "Review submitted successfully",
+    data: review,
+  });
+});
+
+// not used
+export const getReviewStats = asyncHandler(async (req, res) => {
+  const { entrepreneurId } = req.params;
+
+  const stats = await Review.aggregate([
+    { $match: { entrepreneur: new mongoose.Types.ObjectId(entrepreneurId) } },
+
+    {
+      $facet: {
+        ratings: [
+          {
+            $group: {
+              _id: "$rating",
+              count: { $sum: 1 },
+            },
+          },
+        ],
+
+        overall: [
+          {
+            $group: {
+              _id: null,
+              average: { $avg: "$rating" },
+              total: { $sum: 1 },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  const ratingCounts = {
+    5: 0,
+    4: 0,
+    3: 0,
+    2: 0,
+    1: 0,
+  };
+
+  stats[0].ratings.forEach((r) => {
+    ratingCounts[r._id] = r.count;
+  });
+
+  const overall = stats[0].overall[0] || { average: 0, total: 0 };
+
+  res.status(200).json({
+    success: true,
+    data: {
+      average: Number(overall.average.toFixed(1)),
+      totalReviews: overall.total,
+      distribution: ratingCounts,
+    },
+  });
+});
+
+export const getReviews = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { page = 1, limit = 5 } = req.query;
+
+  const pageNum = Math.max(parseInt(page), 1);
+  const limitNum = Math.min(Math.max(parseInt(limit), 1), 20);
+  const skip = (pageNum - 1) * limitNum;
+
+  const entrepreneur = await Entrepreneur.findOne({
+    user: id,
+  });
+
+  if (!entrepreneur) {
+    throw new AppError("Entrepreneur not found", 404);
+  }
+
+  const matchStage = {
+    entrepreneur: entrepreneur._id,
+  };
+
+  /* ---------------- AGGREGATION ---------------- */
+
+  const result = await Review.aggregate([
+    { $match: matchStage },
+
+    {
+      $facet: {
+        /* 📦 PAGINATED REVIEWS */
+        reviews: [
+          { $sort: { createdAt: -1 } },
+          { $skip: skip },
+          { $limit: limitNum },
+
+          {
+            $lookup: {
+              from: "users",
+              localField: "customer",
+              foreignField: "_id",
+              as: "customer",
+            },
+          },
+          { $unwind: "$customer" },
+
+          {
+            $lookup: {
+              from: "services",
+              localField: "service",
+              foreignField: "_id",
+              as: "service",
+            },
+          },
+          { $unwind: "$service" },
+
+          {
+            $project: {
+              rating: 1,
+              comment: 1,
+              createdAt: 1,
+
+              "customer._id": 1,
+              "customer.name": 1,
+
+              "service._id": 1,
+              "service.title": 1,
+            },
+          },
+        ],
+
+        /* 📊 STATS */
+        stats: [
+          {
+            $group: {
+              _id: null,
+              average: { $avg: "$rating" },
+              total: { $sum: 1 },
+
+              five: {
+                $sum: { $cond: [{ $eq: ["$rating", 5] }, 1, 0] },
+              },
+              four: {
+                $sum: { $cond: [{ $eq: ["$rating", 4] }, 1, 0] },
+              },
+              three: {
+                $sum: { $cond: [{ $eq: ["$rating", 3] }, 1, 0] },
+              },
+              two: {
+                $sum: { $cond: [{ $eq: ["$rating", 2] }, 1, 0] },
+              },
+              one: {
+                $sum: { $cond: [{ $eq: ["$rating", 1] }, 1, 0] },
+              },
+            },
+          },
+        ],
+
+        /* 🔢 TOTAL (for pagination) */
+        totalCount: [{ $count: "count" }],
+      },
+    },
+  ]);
+
+  /* ---------------- FORMAT ---------------- */
+
+  const reviews = result[0]?.reviews || [];
+  const stats = result[0]?.stats[0] || {};
+  const total = result[0]?.totalCount[0]?.count || 0;
+
+  const average = stats.average ? Number(stats.average.toFixed(1)) : 0;
+
+  const breakdown = {
+    5: stats.five || 0,
+    4: stats.four || 0,
+    3: stats.three || 0,
+    2: stats.two || 0,
+    1: stats.one || 0,
+  };
+
+  /* ---------------- RESPONSE ---------------- */
+
+  res.status(200).json({
+    success: true,
+    message: "Reviews fetched successfully",
+    data: {
+      reviews,
+      average,
+      total,
+      breakdown,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+    },
+  });
+});
+
+export const getDashboardStats = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+
+  const entrepreneur = await Entrepreneur.findOne({ user: userId });
+
+  if (!entrepreneur) {
+    throw new AppError("Entrepreneur not found", 404);
+  }
+
+  const entrepreneurId = entrepreneur._id;
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const MONTHS = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  /* ---------------- SINGLE FACET QUERY ---------------- */
+
+  const [result] = await Booking.aggregate([
+    { $match: { entrepreneur: entrepreneurId } },
+
+    {
+      $facet: {
+        /* 🔹 BASIC STATS */
+        stats: [
+          {
+            $group: {
+              _id: null,
+              totalOrders: { $sum: 1 },
+              totalEarnings: {
+                $sum: {
+                  $cond: [
+                    { $eq: ["$paymentStatus", "Paid"] },
+                    "$totalAmount",
+                    0,
+                  ],
+                },
+              },
+              pendingToday: {
+                $sum: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $eq: ["$status", "Pending"] },
+                        { $gte: ["$createdAt", todayStart] },
+                        { $lte: ["$createdAt", todayEnd] },
+                      ],
+                    },
+                    1,
+                    0,
+                  ],
+                },
+              },
+            },
+          },
+        ],
+
+        /* 🔹 MONTHLY BOOKINGS */
+        monthly: [
+          {
+            $group: {
+              _id: { $month: "$createdAt" },
+              count: { $sum: 1 },
+            },
+          },
+        ],
+
+        /* 🔹 STATUS STATS */
+        status: [
+          {
+            $group: {
+              _id: "$status",
+              value: { $sum: 1 },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  /* ---------------- FORMAT STATS ---------------- */
+
+  const statsData = result.stats[0] || {
+    totalOrders: 0,
+    totalEarnings: 0,
+    pendingToday: 0,
+  };
+
+  /* ---------------- MONTHLY TRANSFORM ---------------- */
+
+  const monthlyBookings = Array.from({ length: 12 }, (_, i) => {
+    const found = result.monthly.find((m) => m._id === i + 1);
+
+    return {
+      month: MONTHS[i],
+      bookings: found?.count || 0,
+    };
+  });
+
+  /* ---------------- STATUS TRANSFORM ---------------- */
+
+  const statusMap = {
+    Pending: 0,
+    Confirmed: 0,
+    Declined: 0,
+    Completed: 0,
+    Cancelled: 0,
+  };
+
+  result.status.forEach((s) => {
+    if (s._id in statusMap) {
+      statusMap[s._id] = s.value;
+    }
+  });
+
+  const statusStats = Object.keys(statusMap).map((key) => ({
+    name: key,
+    value: statusMap[key],
+  }));
+
+  /* ---------------- RESPONSE ---------------- */
+
+  res.status(200).json({
+    success: true,
+    data: {
+      stats: {
+        totalEarnings: statsData.totalEarnings,
+        totalOrders: statsData.totalOrders,
+        avgRating: entrepreneur.rating?.average || 0,
+        totalReviews: entrepreneur.rating?.totalReviews || 0,
+        pendingToday: statsData.pendingToday,
+      },
+      charts: {
+        monthlyBookings,
+        statusStats,
+      },
+    },
   });
 });

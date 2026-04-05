@@ -17,6 +17,7 @@ export type EntrepreneurCard = {
 
 export type SearchResponse = {
   success: boolean;
+  message: string;
   data: {
     entrepreneurs: EntrepreneurCard[];
     totalFiltered: { count: number }[];
@@ -25,17 +26,39 @@ export type SearchResponse = {
 
 export const useSearchEntrepreneurs = (
   search: string,
-  category?: string,
+  category: string,
+  rating: string,
+  availableToday: boolean,
+  homeService: boolean,
   page?: number,
   limit?: number,
 ) => {
   return useQuery({
-    queryKey: ["entrepreneurs-search", search, category, page, limit],
+    queryKey: [
+      "entrepreneurs-search",
+      search,
+      category,
+      page,
+      limit,
+      rating,
+      availableToday,
+      homeService,
+    ],
 
     queryFn: async () => {
       const { data } = await axiosApi.get<SearchResponse>(
         "/entrepreneurs/search/profile",
-        { params: { search, category, page, limit } },
+        {
+          params: {
+            search,
+            category,
+            rating,
+            page,
+            limit,
+            availableToday,
+            homeService,
+          },
+        },
       );
 
       return {

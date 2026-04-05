@@ -1,18 +1,11 @@
-import React from "react";
 import { usePublicServices } from "../../hooks/User/usePublicServices ";
 import Spinner from "../Shared/Spinner";
 
 type PropsType = {
-  selectedService: string;
   id: string | undefined;
-  setSelectedService: (item: string) => void;
 };
 
-function ServicesOffered({
-  id,
-  selectedService,
-  setSelectedService,
-}: PropsType) {
+function ServicesOffered({ id }: PropsType) {
   const { data: services, isLoading, isError, error } = usePublicServices(id);
 
   if (isLoading)
@@ -31,20 +24,9 @@ function ServicesOffered({
         {services?.map((s) => (
           <button
             key={s._id}
-            onClick={() => setSelectedService(s._id)}
             className={`relative text-left p-4 rounded-xl bg-[var(--cream)] border border-[rgba(196,99,42,0.12)] transition-all duration-200 hover:-translate-y-0.5
-                    ${
-                      selectedService === s._id
-                        ? "border-[var(--clay)] bg-[var(--cream)]"
-                        : "hover:border-[var(--clay)] hover:bg-white"
-                    }`}
+                    hover:border-[var(--clay)] hover:bg-white`}
           >
-            {selectedService === s._id && (
-              <span className="absolute top-3 right-3 w-5 h-5 bg-[#C4632A] text-white rounded-full text-xs flex items-center justify-center">
-                ✓
-              </span>
-            )}
-
             <div className="text-2xl">👗</div>
             <div className="font-semibold mt-3 text-sm">{s.title}</div>
             <div className="mt-1 text-xs text-[var(--earth-mid)]">

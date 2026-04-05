@@ -1,37 +1,9 @@
-import type { statsDataType } from "../Entrepreneur/EntrepreneursOverview";
+import { useAdminDashboard } from "../../hooks/Admin/useAdminDashboard";
+import AdminGrowthChart from "../charts/AdminGrowthChart";
 import QuickActions from "../QuickActions";
+import Header from "../Shared/Header";
+import Spinner from "../Shared/Spinner";
 import StatsGrid from "../StatsGrid";
-
-const statsData: statsDataType[] = [
-  {
-    icon: "👥",
-    label: "Total Users",
-    value: "2,842",
-    change: "↑ 124 this month",
-    sub: "86 new today",
-  },
-  {
-    icon: "🧵",
-    label: "Entrepreneurs",
-    value: "412",
-    change: "↑ 18 pending approvals",
-    sub: "92 verified",
-  },
-  {
-    icon: "📦",
-    label: "Total Orders",
-    value: "1,284",
-    change: "↑ 8% vs last month",
-    sub: "23 active disputes",
-  },
-  {
-    icon: "💰",
-    label: "Platform Revenue",
-    value: "₹3,84,200",
-    change: "↑ 22% growth",
-    sub: "₹42,000 this week",
-  },
-];
 
 export type QuickAction = {
   icon: string;
@@ -68,65 +40,57 @@ const adminActions: QuickAction[] = [
 ];
 
 export default function AdminOverview() {
+  const { data, isLoading, isError } = useAdminDashboard();
+
+  const statsData = [
+    {
+      icon: "👥",
+      label: "Total Users",
+      value: data?.stats?.totalUsers.toString() || "0",
+      change: `+${data?.stats?.newUsersToday || "0"} today`,
+      sub: "",
+    },
+    {
+      icon: "🧵",
+      label: "Entrepreneurs",
+      value: data?.stats.totalEntrepreneurs.toString() || "0",
+      change: `${data?.stats.pendingApprovals || "0"} pending`,
+      sub: `${data?.stats.verifiedEntrepreneurs || "0"} verified`,
+    },
+    {
+      icon: "📦",
+      label: "Orders",
+      value: data?.stats.totalOrders.toString() || "0",
+      change: "",
+      sub: `${data?.stats.completedOrders || "0"} completed`,
+    },
+    {
+      icon: "💰",
+      label: "Revenue",
+      value: `₹${data?.stats.totalRevenue || "0"}`,
+      change: "",
+      sub: `₹${data?.stats.weeklyRevenue || "0"} this week`,
+    },
+  ];
+
+  if (isLoading) return <Spinner />;
+  if (isError) return <p>Error loading dashboard</p>;
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
       {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-2xl font-bold">Admin Dashboard 👑</div>
-          <div className="text-sm text-[#6B4A2D]">
-            Monitor platform activity and system health
-          </div>
-        </div>
-        <button className="px-4 py-2 rounded-lg bg-[#C4632A] text-white text-sm font-semibold">
-          Generate Report
-        </button>
-      </div>
-      {/* ALERTS */}
-      <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-red-200 bg-red-50">
-        <span className="text-xl">🚨</span>
-        <div className="flex-1">
-          <div className="text-sm font-semibold">
-            23 unresolved complaints require attention
-          </div>
-          <div className="text-xs text-red-600">
-            Review flagged orders and user disputes
-          </div>
-        </div>
-        <button className="px-4 py-2 text-xs font-semibold bg-red-500 text-white rounded-lg">
-          View Complaints →
-        </button>
-      </div>
+      <Header
+        title="Admin Dashboard"
+        description="Monitor platform activity and system health"
+        children={
+          <button className="px-4 py-2 rounded-lg bg-[#C4632A] text-white text-sm font-semibold">
+            Generate Report
+          </button>
+        }
+      />
       {/* STATS */}
       <StatsGrid statsData={statsData} />
       {/* PLATFORM ACTIVITY */}
-      <div className="bg-white p-4 rounded-xl border border-[rgba(196,99,42,0.12)]">
-        <div className="font-semibold mb-2">Platform Growth</div>
-        <div className="text-xs text-[#6B4A2D] mb-3">
-          User acquisition over last 6 months
-        </div>
-
-        <svg viewBox="0 0 520 160" className="w-full">
-          <defs>
-            <linearGradient id="adminGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#C4632A" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#C4632A" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-
-          <path
-            d="M30,130 C80,110 120,95 160,100 C200,105 240,75 290,70 C340,65 370,80 410,60 C450,50 480,35 510,30 L510,150 L30,150 Z"
-            fill="url(#adminGrad)"
-          />
-
-          <path
-            d="M30,130 C80,110 120,95 160,100 C200,105 240,75 290,70 C340,65 370,80 410,60 C450,50 480,35 510,30"
-            fill="none"
-            stroke="#C4632A"
-            strokeWidth="2.5"
-          />
-        </svg>
-      </div>
+      <AdminGrowthChart growth={data?.charts?.growth}/>
       {/* Quick Actions */}
       <QuickActions actions={adminActions} />;
     </div>

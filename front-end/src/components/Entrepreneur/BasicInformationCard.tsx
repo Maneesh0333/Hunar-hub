@@ -58,6 +58,17 @@ function BasicInformationCard({ data }: { data: EntrepreneurProfile | undefined 
           }
           inputClassName="!px-3 !py-2 text-sm"
         />
+
+        <InputField
+          label="Payment"
+          readOnly={true}
+          value={
+            data?.payment.length === 0
+              ? "Payment not added"
+              : data?.payment.toString()
+          }
+          inputClassName="!px-3 !py-2 text-sm"
+        />
       </div>
     </section>
   );

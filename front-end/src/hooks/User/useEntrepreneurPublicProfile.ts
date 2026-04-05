@@ -19,7 +19,7 @@ export type EntrepreneurProfile = {
   bio: string;
   about: string;
   city: string;
-
+  visitType: string[];
   skills: string[];
   payment: string[];
   category: {
@@ -47,7 +47,7 @@ export const useEntrepreneurPublicProfile = (id: string | undefined) => {
     queryKey: ["entrepreneur-public-profile", id],
     queryFn: async () => {
       const res = await axiosApi.get<ResponseTypeApi>(
-        `/entrepreneurs/public/profile/${id}`, 
+        `/entrepreneurs/public/profile/${id}`,
       );
       return res.data?.data;
     },

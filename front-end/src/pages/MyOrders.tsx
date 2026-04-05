@@ -1,122 +1,249 @@
-import { useState } from "react";
-
-const tabs = [
-  { label: "All", count: 18 },
-  { label: "Active", count: 2 },
-  { label: "Completed", count: 15 },
-  { label: "Cancelled", count: 1 },
-];
+import { useMemo, useState } from "react";
+import { useCancelBooking, useUserBookings } from "../hooks/User/useBooking";
+import Header from "../components/Shared/Header";
+import FilterChips from "../components/Shared/FilterChips";
+import { getChips } from "../utils/EntrepreneurFilters";
+import SideSheet from "../components/Shared/SideSheet";
+import ReviewForm from "../components/forms/ReviewForm";
+import ComplaintForm from "../components/forms/ComplaintForm";
+import Spinner from "../components/Shared/Spinner";
 
 export default function MyOrders() {
-  const [activeTab, setActiveTab] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
+  const [complaintBooking, setComplaintBooking] = useState<string | null>(null);
+
+  const { data, isLoading, isError } = useUserBookings("", statusFilter);
+  const cancelMutation = useCancelBooking();
+
+  const bookings = data?.bookings ?? [];
+
+  const chips = useMemo(
+    () => [...getChips(data?.stats, data?.totalBookings)].reverse(),
+    [data?.stats, data?.totalBookings],
+  );
+
+  if (isError)
+    return (
+      <p className="flex-1 flex items-center justify-center text-red-500">
+        Error loading bookings
+      </p>
+    );
 
   return (
-    <div className="flex-1 p-6 text-[#2C1A0E] space-y-6">
+    <div className="flex-1 flex flex-col p-6 text-[#2C1A0E] space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-playfair font-black">My Orders</h1>
-        <p className="text-sm text-[#6B4A2D]">18 total orders</p>
-      </div>
+      <Header
+        title="My Orders"
+        description={`${data?.totalBookings || 0} total orders`}
+      />
 
-      {/* Tabs */}
-      <div className="flex gap-3 flex-wrap">
-        {tabs.map((tab) => (
-          <button
-            key={tab.label}
-            onClick={() => setActiveTab(tab.label)}
-            className={`px-4 py-2 rounded-full text-sm font-medium border transition
-              ${
-                activeTab === tab.label
-                  ? "bg-[var(--clay)] text-white border-[var(--clay)]"
-                  : "bg-white text-[#6B4A2D] border-[rgba(196,99,42,0.2)] hover:border-[var(--clay)]"
-              }`}
-          >
-            {tab.label} ({tab.count})
-          </button>
-        ))}
-      </div>
-
-      {/* Order Card */}
-      <div className="flex gap-5 items-center bg-[var(--cream)] rounded-2xl border border-[rgba(196,99,42,0.12)] p-5">
-        <div className="w-15 h-15 rounded-2xl bg-[#D4B896] flex items-center justify-center text-3xl shadow">
-          🧵
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
         </div>
+      ) : (
+        <>
+          <FilterChips
+            chips={chips}
+            active={statusFilter}
+            onChange={setStatusFilter}
+          />
 
-        <div className="flex flex-col gap-3 flex-1">
-          <div className="flex justify-between flex-1">
-            <div className="flex flex-col gap-2">
-              <div>
-                <h3 className="font-semibold text-[16px]">
-                  Bridal Lehenga Stitching
-                </h3>
-                <p className="text-[11px] text-[#6B4A2D]">
-                  Rashida Begum · Master Tailor · Hazratganj
-                </p>
-              </div>
+          {/* Orders List */}
+          <div className="space-y-4 flex flex-col flex-1">
+            {bookings.length === 0 && (
+              <p className="flex-1 flex items-center justify-center text-sm text-[#6B4A2D]">No bookings found</p>
+            )}
 
-              <span className="px-3 py-0.5 text-[10px] border border-[rgba(196,99,42,0.12)] w-fit rounded-full">
-                #HH-1840
-              </span>
-              <span className="px-3 py-0.5 text-[10px] border border-[rgba(196,99,42,0.12)] w-fit rounded-full">
-                Booked 24 Feb
-              </span>
-            </div>
+            {bookings.map((item) => {
+              const isCancelling =
+                cancelMutation.isPending &&
+                cancelMutation.variables?.id === item._id;
 
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1 items-end">
-                <span className="px-3 py-0.5 text-[11px] font-semibold w-fit rounded-full bg-blue-100 text-blue-700">
-                  🔵 In Progress
-                </span>
+              return (
+                <div
+                  key={item._id}
+                  className="group relative bg-[var(--cream)] rounded-2xl border border-[rgba(196,99,42,0.15)] p-5 shadow-sm hover:shadow-md transition-all duration-300"
+                >
+                  {/* Top Section */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex gap-4">
+                      <div className="w-14 h-14 rounded-xl bg-[rgba(196,99,42,0.1)] flex items-center justify-center text-2xl border border-[rgba(196,99,42,0.2)]">
+                        🧵
+                      </div>
 
-                <div className="flex flex-col items-end">
-                  <div className="font-bold text-xl">₹3,200</div>
-                  <div className="text-[11px] text-[#6B4A2D]">
-                    Due 4 Mar 2026
+                      <div>
+                        <h3 className="font-bold text-[#2C1A0E] text-lg leading-tight group-hover:text-[var(--clay)] transition-colors">
+                          {item.service.title}
+                        </h3>
+
+                        <p className="text-sm text-[#6B4A2D] font-medium">
+                          by {item.entrepreneur?.user?.name || "Entrepreneur"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* STATUS */}
+                    <div className="flex flex-col items-end gap-1">
+                      <span
+                        className={`text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full
+                    ${
+                      item.status === "Pending"
+                        ? "bg-[rgba(245,158,11,0.15)] text-amber-700"
+                        : item.status === "Confirmed"
+                          ? "bg-[rgba(59,130,246,0.15)] text-blue-700"
+                          : item.status === "Completed"
+                            ? "bg-[rgba(34,197,94,0.15)] text-green-700"
+                            : "bg-[rgba(239,68,68,0.15)] text-red-600"
+                    }`}
+                      >
+                        {item.status}
+                      </span>
+
+                      <p className="text-[10px] text-[#8B5E3C] font-mono">
+                        #{item.bookingId}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Middle (Progress & Pricing) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 border-y border-[rgba(196,99,42,0.08)] items-center">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[10px] font-bold text-[#8B5E3C] uppercase">
+                        <span>Placed</span>
+                        <span>Processing</span>
+                        <span>Done</span>
+                      </div>
+
+                      <div className="h-2 rounded-full bg-[rgba(196,99,42,0.15)] overflow-hidden">
+                        <div
+                          className="h-full bg-[var(--clay)] transition-all duration-700"
+                          style={{
+                            width:
+                              item.status === "Pending"
+                                ? "20%"
+                                : item.status === "Confirmed"
+                                  ? "60%"
+                                  : item.status === "Completed"
+                                    ? "100%"
+                                    : "0%",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-[10px] text-[#8B5E3C]">Total</p>
+                        <p className="text-xl font-black text-[#2C1A0E]">
+                          ₹{item.totalAmount}
+                        </p>
+                      </div>
+                      <div className="h-10 w-[1px] bg-[rgba(196,99,42,0.1)]" />
+                      <div className="text-right">
+                        <p className="text-[10px] text-[#8B5E3C]">Payment</p>
+                        <p
+                          className={`text-xs font-bold ${item.paymentStatus === "Paid" ? "text-green-700" : "text-amber-600"}`}
+                        >
+                          {item.paymentStatus}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Section */}
+                  <div className="flex justify-between items-center mt-4">
+                    <span className="text-xs italic text-[#8B5E3C]">
+                      Ordered on{" "}
+                      {new Date(item.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </span>
+
+                    <div className="flex gap-4 items-center">
+                      {/* Cancel */}
+                      {item.status === "Pending" && (
+                        <button
+                          disabled={isCancelling}
+                          onClick={() =>
+                            cancelMutation.mutate({ id: item._id })
+                          }
+                          className="text-xs font-bold text-red-500 hover:text-red-700 disabled:opacity-40"
+                        >
+                          {isCancelling ? "Processing..." : "Cancel"}
+                        </button>
+                      )}
+
+                      {/* Review */}
+                      {item.status === "Completed" && !item.isReviewed && (
+                        <button
+                          onClick={() => setSelectedBooking(item._id)}
+                          className="text-xs font-bold text-[var(--clay)] hover:underline"
+                        >
+                          Write Review
+                        </button>
+                      )}
+                      {item.status === "Completed" && item.isReviewed && (
+                        <span className="text-xs font-bold text-green-600">
+                          ✔ Reviewed
+                        </span>
+                      )}
+
+                      {(item.status === "Completed" ||
+                        item.status === "Confirmed") &&
+                        !item.isComplained && (
+                          <button
+                            onClick={() => setComplaintBooking(item._id)}
+                            className="text-xs font-bold text-red-500 hover:underline"
+                          >
+                            Report Issue
+                          </button>
+                        )}
+
+                      {(item.status === "Completed" ||
+                        item.status === "Confirmed") &&
+                        item.isComplained && (
+                          <span className="text-xs font-bold text-green-600">
+                            ✔ Reported
+                          </span>
+                        )}
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-3">
-                <button className="px-4 py-2 text-sm rounded-lg border border-[rgba(196,99,42,0.3)] hover:border-[var(--clay)]">
-                  💬 Message
-                </button>
-
-                <button className="px-5 py-2 text-sm font-semibold rounded-lg bg-[var(--clay)] text-white hover:bg-[var(--clay-dark)]">
-                  Track →
-                </button>
-              </div>
-            </div>
+              );
+            })}
           </div>
+        </>
+      )}
 
-          {/* Progress */}
-          <div className="relative flex items-center text-xs text-[#6B4A2D] w-fit">
-            <div className="absolute top-1.5 w-full px-8">
-              <div className="relative">
-                <div className="absolute top-0 left-0 h-1 bg-green-600 w-[60%] z-10" />
-                <div className="absolute top-0 left-0 h-1 bg-[var(--khaki)] w-full" />
-              </div>
-            </div>
+      <SideSheet
+        open={!!selectedBooking}
+        onClose={() => setSelectedBooking(null)}
+        title="Rate Your Experience"
+      >
+        {selectedBooking && (
+          <ReviewForm
+            bookingId={selectedBooking}
+            closeSheet={() => setSelectedBooking(null)}
+          />
+        )}
+      </SideSheet>
 
-            {["Booked", "Confirmed", "In Work", "Ready", "Delivered"].map(
-              (step, index) => (
-                <div
-                  key={step}
-                  className="flex flex-col w-16 items-center gap-2"
-                >
-                  <span
-                    className={`z-10 w-4 h-4 rounded-full flex items-center justify-center
-                    ${index < 3 ? "bg-green-600 text-white" : "bg-[#E5D5C3]"}`}
-                  >
-                    ✓
-                  </span>
-                  <span>{step}</span>
-                </div>
-              ),
-            )}
-          </div>
-        </div>
-      </div>
+      <SideSheet
+        open={!!complaintBooking}
+        onClose={() => setComplaintBooking(null)}
+        title="Report an Issue"
+      >
+        {complaintBooking && (
+          <ComplaintForm
+            booking={complaintBooking}
+            closeSheet={() => setComplaintBooking(null)}
+          />
+        )}
+      </SideSheet>
     </div>
   );
 }

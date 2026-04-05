@@ -1,15 +1,28 @@
 import { useState, useEffect } from "react";
 import Header from "../Shared/Header";
-import { useAvailability, useSaveAvailability } from "../../hooks/Entrepreneur/useAvailability";
-
+import {
+  useAvailability,
+  useSaveAvailability,
+} from "../../hooks/Entrepreneur/useAvailability";
+import Spinner from "../Shared/Spinner";
 
 type ISODate = `${number}-${number}-${number}`;
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const MONTHS = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 function generateCalendar(year: number, monthIndex: number): number[] {
@@ -53,11 +66,14 @@ export default function AvailabilityCalendar() {
   const [year, setYear] = useState(() => today.getFullYear());
   const [monthIndex, setMonthIndex] = useState(() => today.getMonth());
 
-  const [savedUnavailableDays, setSavedUnavailableDays] = useState<Set<ISODate>>(new Set());
-  const [draftUnavailableDays, setDraftUnavailableDays] = useState<Set<ISODate>>(new Set());
+  const [savedUnavailableDays, setSavedUnavailableDays] = useState<
+    Set<ISODate>
+  >(new Set());
+  const [draftUnavailableDays, setDraftUnavailableDays] = useState<
+    Set<ISODate>
+  >(new Set());
 
   const [canEdit, setCanEdit] = useState(false);
-
 
   const { data, isLoading } = useAvailability();
   const { mutate: saveAvailability, isPending } = useSaveAvailability();
@@ -113,7 +129,7 @@ export default function AvailabilityCalendar() {
           setDraftUnavailableDays(set);
           setCanEdit(false);
         },
-      }
+      },
     );
   }
 
@@ -150,9 +166,7 @@ export default function AvailabilityCalendar() {
   }, [monthIndex, year]);
 
   // ⏳ Loading state
-  if (isLoading) {
-    return <div className="p-6">Loading availability...</div>;
-  }
+  if (isLoading) return <Spinner />;
 
   return (
     <div className="flex-1 p-6 bg-[#FAF5ED] rounded-xl space-y-6 text-[#2C1A0E]">
@@ -193,7 +207,9 @@ export default function AvailabilityCalendar() {
           const iso = toISODate(year, monthIndex, day);
           const isPast = isCurrentMonth && isPastISODate(iso);
 
-          const activeSet = canEdit ? draftUnavailableDays : savedUnavailableDays;
+          const activeSet = canEdit
+            ? draftUnavailableDays
+            : savedUnavailableDays;
           const isUnavailable = isCurrentMonth && activeSet.has(iso);
 
           return (

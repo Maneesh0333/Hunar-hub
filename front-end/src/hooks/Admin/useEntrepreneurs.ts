@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosApi from "../../lib/axios";
 import type { BlockUnblockResponseType } from "./useUsers";
+import toast from "react-hot-toast";
+import type { AxiosError } from "axios";
 
 export type Entrepreneur = {
   _id: string;
@@ -40,15 +42,21 @@ type EntrepreneursResponse = {
   entrepreneurs: Entrepreneur[];
 };
 
+type ResponseType = {
+  success: boolean;
+  message: string;
+  data: EntrepreneursResponse;
+};
+
 export const useEntrepreneurs = (
   status: string,
   search: string,
   view: "entrepreneurs" | "applications",
 ) => {
-  return useQuery<EntrepreneursResponse>({
+  return useQuery({
     queryKey: ["entrepreneurs", status, search],
     queryFn: async () => {
-      const res = await axiosApi.get(
+      const res = await axiosApi.get<ResponseType>(
         `/admin/entrepreneurs?status=${status}&search=${search}&view=${view}`,
       );
 
@@ -65,17 +73,8 @@ export const useEntrepreneurs = (
         entrepreneurs: data?.entrepreneurs ?? [],
       };
     },
-
-    initialData: {
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 1,
-      results: 0,
-      totalEntrepreneurs: 0,
-      stats: { Pending: 0, Approved: 0, Rejected: 0 },
-      entrepreneurs: [],
-    },
+    placeholderData: (prev) => prev,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -87,12 +86,38 @@ type ApproveRejectResponseType = {
 export const useApproveEntrepreneur = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<ApproveRejectResponseType, Error, string>({
-    mutationFn: (id: string) =>
-      axiosApi.patch(`/admin/entrepreneurs/${id}/approve`),
+  return useMutation<
+    ApproveRejectResponseType,
+    AxiosError<ApproveRejectResponseType>,
+    string
+  >({
+    mutationFn: async (id) => {
+      const res = await axiosApi.patch<ApproveRejectResponseType>(
+        `/admin/entrepreneurs/${id}/approve`,
+      );
+      return res.data;
+    },
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entrepreneurs"] });
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(data.message || "Approval failed");
+        return;
+      }
+
+      toast.success(data.message || "Approval successful");
+
+      queryClient.invalidateQueries({
+        queryKey: ["entrepreneurs"],
+      });
+    },
+
+    onError: (error) => {
+      if (!error.response) {
+        toast.error("Network error, please try again later.");
+        return;
+      }
+
+      toast.error(error.response.data?.message || "Approval failed");
     },
   });
 };
@@ -100,12 +125,38 @@ export const useApproveEntrepreneur = () => {
 export const useRejectEntrepreneur = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<ApproveRejectResponseType, Error, string>({
-    mutationFn: (id: string) =>
-      axiosApi.patch(`/admin/entrepreneurs/${id}/reject`),
+  return useMutation<
+    ApproveRejectResponseType,
+    AxiosError<ApproveRejectResponseType>,
+    string
+  >({
+    mutationFn: async (id) => {
+      const res = await axiosApi.patch<ApproveRejectResponseType>(
+        `/admin/entrepreneurs/${id}/reject`,
+      );
+      return res.data;
+    },
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entrepreneurs"] });
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(data.message || "Rejection failed");
+        return;
+      }
+
+      toast.success(data.message || "Entrepreneur rejected");
+
+      queryClient.invalidateQueries({
+        queryKey: ["entrepreneurs"],
+      });
+    },
+
+    onError: (error) => {
+      if (!error.response) {
+        toast.error("Network error, please try again later.");
+        return;
+      }
+
+      toast.error(error.response?.data?.message || "Rejection failed");
     },
   });
 };
@@ -113,11 +164,38 @@ export const useRejectEntrepreneur = () => {
 export const useBlockEntrepreneur = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<BlockUnblockResponseType, Error, string>({
-    mutationFn: (id: string) => axiosApi.patch(`/admin/users/${id}/block`),
+  return useMutation<
+    BlockUnblockResponseType,
+    AxiosError<BlockUnblockResponseType>,
+    string
+  >({
+    mutationFn: async (id) => {
+      const res = await axiosApi.patch<BlockUnblockResponseType>(
+        `/admin/users/${id}/block`,
+      );
+      return res.data;
+    },
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entrepreneurs"] });
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(data.message || "Block failed");
+        return;
+      }
+
+      toast.success(data.message || "Entrepreneur blocked");
+
+      queryClient.invalidateQueries({
+        queryKey: ["entrepreneurs"],
+      });
+    },
+
+    onError: (error) => {
+      if (!error.response) {
+        toast.error("Network error, please try again later.");
+        return;
+      }
+
+      toast.error(error.response?.data?.message || "Block failed");
     },
   });
 };
@@ -125,11 +203,37 @@ export const useBlockEntrepreneur = () => {
 export const useUnblockEntrepreneur = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<BlockUnblockResponseType, Error, string>({
-    mutationFn: (id: string) => axiosApi.patch(`/admin/users/${id}/unblock`),
+  return useMutation<
+    BlockUnblockResponseType,
+    AxiosError<BlockUnblockResponseType>,
+    string
+  >({
+    mutationFn: async (id) => {
+      const res = await axiosApi.patch<BlockUnblockResponseType>(
+        `/admin/users/${id}/unblock`,
+      );
+      return res.data;
+    },
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entrepreneurs"] });
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(data.message || "Unblock failed");
+        return;
+      }
+
+      toast.success(data.message || "Entrepreneur unblocked");
+
+      queryClient.invalidateQueries({
+        queryKey: ["entrepreneurs"],
+      });
+    },
+
+    onError: (error) => {
+      if (!error.response) {
+        toast.error("Network error, please try again later.");
+        return;
+      }
+      toast.error(error.response?.data?.message || "Unblock failed");
     },
   });
 };

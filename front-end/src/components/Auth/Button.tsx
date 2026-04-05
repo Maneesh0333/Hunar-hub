@@ -3,7 +3,7 @@ type ButtonProps = {
   label: string;
   type?: "submit" | "reset" | "button";
   isLoading?: boolean;
-  onClick: ()=> void;
+  onClick?: ()=> void;
 };
 
 function Button({

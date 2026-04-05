@@ -3,22 +3,28 @@
 import { useState } from "react";
 import { PieChart, Pie, Cell, Sector, ResponsiveContainer } from "recharts";
 
-const data = [
-  { name: "Confirmed", value: 45 },
-  { name: "Pending", value: 20 },
-  { name: "Cancelled", value: 10 },
-];
+/* ---------------- TYPES ---------------- */
 
-const COLORS = {
-  Confirmed: "#22C55E", // green
-  Pending: "#F59E0B", // amber
-  Cancelled: "#EF4444", // red
+type StatusStat = {
+  name: string;
+  value: number;
 };
 
-export default function BookingStatusDonut() {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+type Props = {
+  data: StatusStat[];
+  total: number;
+};
 
-  const total = data.reduce((acc, item) => acc + item.value, 0);
+const COLORS = {
+  Pending: "#F59E0B",
+  Confirmed: "#3B82F6",
+  Completed: "#22C55E",
+  Cancelled: "#EF4444",
+  Declined: "#6B7280",
+};
+
+export default function BookingStatusPie({ data, total }: Props) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const activeItem = activeIndex !== null ? data[activeIndex] : null;
 
@@ -26,9 +32,11 @@ export default function BookingStatusDonut() {
   const displayLabel = activeItem ? activeItem.name : "Total Bookings";
 
   return (
-    <div className="relative flex-1 h-full bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-8">
-      <h2 className="font-semibold mb-1">Order Status</h2>
-      <p className="text-xs text-[var(--earth-light)] mb-3">This month · 138 total</p>
+    <div className="relative flex-1 h-96 bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-8">
+      <h2 className="font-semibold mb-1">Bookings Status</h2>
+      <p className="text-xs text-[var(--earth-light)] mb-3">
+        This month · {total} total
+      </p>
 
       <ResponsiveContainer width="100%" height="80%">
         <PieChart>
@@ -46,7 +54,7 @@ export default function BookingStatusDonut() {
             {data.map((entry, index) => (
               <Cell
                 key={index}
-                fill={COLORS[entry.name as keyof typeof COLORS]}
+                fill={COLORS[entry.name as keyof typeof COLORS] || "#ccc"}
               />
             ))}
           </Pie>

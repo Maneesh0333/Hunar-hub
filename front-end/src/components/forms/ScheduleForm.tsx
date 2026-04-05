@@ -266,7 +266,7 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
         type="submit"
         label={schedule ? "Update Schedule" : "Add Schedule"}
         className="w-full"
-        disabled={!isValid || !isDirty}
+        disabled={!isValid || !isDirty || schedule ? updateMutation.isPending : createMutation.isPending}
         isLoading={
           schedule ? updateMutation.isPending : createMutation.isPending
         }

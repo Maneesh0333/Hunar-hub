@@ -18,7 +18,6 @@ export default function ServicesRow({ item, onEdit }: Props) {
   return (
     <tr className="border-t border-[var(--border-1)]">
       <td className="px-4 py-4">{item.title}</td>
-      <td className="px-4 py-4">{item.category}</td>
 
       <td className="px-4 py-4">
         ₹{item.price} / {item.priceUnit.split("_")[1].toString()}

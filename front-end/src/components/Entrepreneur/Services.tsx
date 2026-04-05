@@ -12,7 +12,8 @@ import {
   useServices,
   type Service,
 } from "../../hooks/Entrepreneur/useServices";
-import { getChips } from "../../utils/entrepreneurFilters";
+import { getChips } from "../../utils/EntrepreneurFilters";
+import Spinner from "../Shared/Spinner";
 
 export default function Services() {
   const [search, setSearch] = useState("");
@@ -29,7 +30,7 @@ export default function Services() {
     [data?.stats, data?.totalServices],
   );
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <Spinner />;
   if (isError) return <p>Error loading services</p>;
   return (
     <div className="flex-1 p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
@@ -63,7 +64,7 @@ export default function Services() {
       </div>
 
       <Table
-        headers={["Title", "Category", "Price", "Status", "Created", "Actions"]}
+        headers={["Title", "Price", "Status", "Created", "Actions"]}
         data={services}
         colSpan={6}
         renderRow={(item) => (

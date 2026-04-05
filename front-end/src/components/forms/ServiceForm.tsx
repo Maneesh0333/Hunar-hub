@@ -12,7 +12,6 @@ import {
   useUpdateServices,
   type Service,
 } from "../../hooks/Entrepreneur/useServices";
-import { useAllCategories } from "../../hooks/Admin/useCategories";
 
 export const createServiceSchema = yup.object({
   title: yup
@@ -40,8 +39,6 @@ export const createServiceSchema = yup.object({
     .string()
     .oneOf(["per_piece", "per_hour", "per_service"])
     .required("Price unit is required"),
-
-  category: yup.string().trim().required("Category is required"),
 
   deliveryTime: yup
     .string()
@@ -71,8 +68,6 @@ export const updateServiceSchema = yup.object({
 
   priceUnit: yup.string().oneOf(["per_piece", "per_hour", "per_service"]),
 
-  category: yup.string().trim(),
-
   deliveryTime: yup.string().trim().max(50, "Delivery time is too long"),
 });
 
@@ -90,10 +85,6 @@ export default function ServiceForm({ service, closeSheet }: Props) {
   const createMutation = useCreateServices();
   const updateMutation = useUpdateServices();
 
-  const { data, isLoading } = useAllCategories();
-
-  const categories = data ?? [];
-
   const {
     handleSubmit,
     control,
@@ -108,7 +99,6 @@ export default function ServiceForm({ service, closeSheet }: Props) {
       description: "",
       price: 0,
       priceUnit: "per_service",
-      category: "",
       deliveryTime: "",
     },
   });
@@ -120,7 +110,6 @@ export default function ServiceForm({ service, closeSheet }: Props) {
         description: service.description,
         price: service.price,
         priceUnit: service.priceUnit,
-        category: service.category,
         deliveryTime: service.deliveryTime,
       });
     } else {
@@ -129,7 +118,6 @@ export default function ServiceForm({ service, closeSheet }: Props) {
         description: "",
         price: 0,
         priceUnit: "per_service",
-        category: "",
         deliveryTime: "",
       });
     }
@@ -177,24 +165,6 @@ export default function ServiceForm({ service, closeSheet }: Props) {
           register={register}
         />
 
-        <Controller
-          name="category"
-          control={control}
-          render={({ field, fieldState }) => (
-            <SelectInput
-              label="Category"
-              value={field.value ?? ""}
-              onChange={(val) => field.onChange(val || undefined)}
-              options={categories.map((cat) => ({
-                label: cat.name,
-                value: cat._id,
-              }))}
-              error={fieldState.error?.message}
-              isLoading={isLoading}
-            />
-          )}
-        />
-
         <InputField
           label="Description"
           placeholder="Enter description"
@@ -237,7 +207,11 @@ export default function ServiceForm({ service, closeSheet }: Props) {
         type="submit"
         label={service ? "Update Service" : "Save Service"}
         className="w-full"
-        disabled={!isValid || !isDirty}
+        disabled={
+          !isValid || !isDirty || service
+            ? updateMutation.isPending
+            : createMutation.isPending
+        }
         isLoading={
           service ? updateMutation.isPending : createMutation.isPending
         }

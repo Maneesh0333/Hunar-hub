@@ -5,23 +5,27 @@ export const updateProfileSchema = yup
     name: yup
       .string()
       .trim()
+      .transform((v) => (v === "" ? undefined : v))
       .min(2, "Name must be at least 2 characters")
       .max(50, "Name is too long"),
 
     email: yup
       .string()
       .trim()
+      .transform((v) => (v === "" ? undefined : v))
       .email("Invalid email format")
-      .lowercase()
-      .transform((value) => value?.toLowerCase()),
+      .lowercase(),
 
     phone: yup
       .string()
-      .matches(/^[0-9]{10,15}$/, "Invalid phone number"),
+      .trim()
+      .transform((v) => (v === "" ? undefined : v))
+      .matches(/^[6-9]\d{9,14}$/, "Invalid phone number"),
 
     city: yup
       .string()
       .trim()
+      .transform((v) => (v === "" ? undefined : v))
       .min(3, "City must be at least 3 characters")
       .max(30, "City is too long"),
   })

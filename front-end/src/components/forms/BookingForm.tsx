@@ -28,9 +28,14 @@ export type bookingSchemaType = yup.InferType<typeof bookingSchema>;
 type Props = {
   servicesId: string | undefined;
   closeSheet: () => void;
+  visitType: string[] | undefined;
 };
 
-export default function BookingForm({ servicesId, closeSheet }: Props) {
+export default function BookingForm({
+  servicesId,
+  closeSheet,
+  visitType,
+}: Props) {
   const { data, isLoading } = usePublicServices(servicesId);
   const services = data ?? [];
 
@@ -54,11 +59,11 @@ export default function BookingForm({ servicesId, closeSheet }: Props) {
 
   const onSubmit = (data: bookingSchemaType) => {
     BookingMutation.mutate(data, {
-      onSuccess: ()=>{
+      onSuccess: () => {
         reset();
         closeSheet();
-      }
-    })
+      },
+    });
   };
 
   return (
@@ -96,7 +101,7 @@ export default function BookingForm({ servicesId, closeSheet }: Props) {
               options={[
                 { label: "I visit the workshop", value: "visit_workshop" },
                 { label: "Artisan visit my home", value: "visit_home" },
-              ]}
+              ].filter((v) => visitType?.includes(v.value))}
               error={fieldState.error?.message}
             />
           )}
@@ -117,7 +122,7 @@ export default function BookingForm({ servicesId, closeSheet }: Props) {
               rows={3}
               className="w-full bg-transparent outline-none resize-none"
               {...register("requirements")}
-              placeholder="Fabric details, measurements, design preferences, or upload a photo reference…"
+              placeholder="Fabric details, measurements, design preferences.."
             />
           </div>
           {errors.requirements && (
@@ -132,7 +137,7 @@ export default function BookingForm({ servicesId, closeSheet }: Props) {
         type="submit"
         label={"Book Now"}
         className="w-full"
-        disabled={!isValid}
+        disabled={!isValid || BookingMutation.isPending}
         isLoading={BookingMutation.isPending}
       />
     </form>

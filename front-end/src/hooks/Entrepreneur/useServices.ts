@@ -10,7 +10,6 @@ export type Service = {
   description: string;
   price: number;
   priceUnit: "per_piece" | "per_hour" | "per_service";
-  category: string;
   deliveryTime?: string;
   isActive: boolean;
   createdAt: string;

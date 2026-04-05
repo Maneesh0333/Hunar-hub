@@ -9,9 +9,12 @@ import {
   getAllServicesAdmin,
   getEntrepreneurs,
   getUsers,
+  getAdminDashboard,
 } from "../controllers/admin.controller.js";
 
 const router = express.Router();
+
+router.get("/dashboard", getAdminDashboard)
 
 // Protect all admin routes
 router.use(isAuthenticated);

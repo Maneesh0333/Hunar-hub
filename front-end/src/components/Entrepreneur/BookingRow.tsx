@@ -1,6 +1,7 @@
 import { ActionButton } from "../Shared/ActionButton";
 import {
   useUpdateBookingStatus,
+  useUpdatePaymentStatus,
   type Booking,
 } from "../../hooks/Entrepreneur/useBookings";
 
@@ -10,6 +11,7 @@ type Props = {
 
 export default function BookingRow({ item }: Props) {
   const statusMutation = useUpdateBookingStatus();
+  const paymentStatusMutation = useUpdatePaymentStatus();
 
   /* ---------------- Loading States ---------------- */
 
@@ -30,6 +32,10 @@ export default function BookingRow({ item }: Props) {
     statusMutation.variables?.id === item._id &&
     statusMutation.variables?.status === "Completed";
 
+  const isMarkingPaid =
+    paymentStatusMutation.isPending &&
+    paymentStatusMutation.variables?.id === item._id;
+
   /* ---------------- Styles ---------------- */
 
   const statusStyles: Record<string, string> = {
@@ -43,7 +49,6 @@ export default function BookingRow({ item }: Props) {
   const paymentStyles: Record<string, string> = {
     Pending: "bg-yellow-100 text-yellow-700",
     Paid: "bg-green-100 text-green-700",
-    Failed: "bg-red-100 text-red-700",
   };
 
   /* ---------------- UI ---------------- */
@@ -67,8 +72,12 @@ export default function BookingRow({ item }: Props) {
       <td className="px-4 py-4">₹{item.totalAmount}</td>
 
       {/* 📍 Visit Type */}
-      <td className="px-4 py-4">
+      <td className="px-4 py-4 min-w-28">
         {item.visitType === "visit_home" ? "Home Visit" : "Workshop"}
+      </td>
+
+      <td className="px-4 py-4 min-w-3xs">
+        {item.requirements || "No requirements added"}
       </td>
 
       {/* 💳 Payment Status */}
@@ -133,19 +142,37 @@ export default function BookingRow({ item }: Props) {
         )}
 
         {item.status === "Confirmed" && (
-          <ActionButton
-            variant="primary"
-            isLoading={isCompleting}
-            onClick={() =>
-              statusMutation.mutate({
-                id: item._id,
-                status: "Completed",
-              })
-            }
-          >
-            Complete
-          </ActionButton>
+          <>
+            <ActionButton
+              variant="primary"
+              isLoading={isCompleting}
+              onClick={() =>
+                statusMutation.mutate({
+                  id: item._id,
+                  status: "Completed",
+                })
+              }
+            >
+              Complete
+            </ActionButton>
+          </>
         )}
+
+        {["Confirmed", "Completed"].includes(item.status) &&
+          item.paymentStatus === "Pending" && (
+            <ActionButton
+              variant="secondary"
+              isLoading={isMarkingPaid}
+              onClick={() =>
+                paymentStatusMutation.mutate({
+                  id: item._id,
+                  paymentStatus: "Paid",
+                })
+              }
+            >
+              Mark as Paid
+            </ActionButton>
+          )}
       </td>
     </tr>
   );

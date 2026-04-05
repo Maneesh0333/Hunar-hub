@@ -3,7 +3,7 @@ import Category from "../models/Category.model.js";
 import AppError from "../utils/AppError.js";
 
 export const createCategory = asyncHandler(async (req, res) => {
-  const { name, description = "", status = "Active" } = req.body;
+  const { name, description = "", status = "Active", icon } = req.body;
 
   const existing = await Category.findOne({
     name: { $regex: `^${name}$`, $options: "i" },
@@ -14,6 +14,7 @@ export const createCategory = asyncHandler(async (req, res) => {
   }
 
   const category = await Category.create({
+    icon,
     name,
     description,
     status,
@@ -30,7 +31,7 @@ export const createCategory = asyncHandler(async (req, res) => {
 export const getAllCategories = asyncHandler(async (req, res) => {
   const categories = await Category.find({ status: "Active" })
     .sort({ createdAt: -1 })
-    .select("categoryId name")
+    .select("categoryId name icon")
     .lean();
 
   res.status(200).json({

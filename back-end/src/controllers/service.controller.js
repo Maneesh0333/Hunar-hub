@@ -1,12 +1,11 @@
 import Service from "../models/Service.model.js";
 import Entrepreneur from "../models/Entrepreneur.model.js";
-import Category from "../models/Category.model.js";
 import AppError from "../utils/AppError.js";
 import { asyncHandler } from "../middleware/async.middleware.js";
 import mongoose from "mongoose";
 
 export const createService = asyncHandler(async (req, res) => {
-  const { title, description, price, category, priceUnit, deliveryTime } =
+  const { title, description, price, priceUnit, deliveryTime } =
     req.body;
 
   const entrepreneur = await Entrepreneur.findOne({
@@ -15,12 +14,6 @@ export const createService = asyncHandler(async (req, res) => {
 
   if (!entrepreneur) {
     throw new AppError("Entrepreneur profile not found", 404);
-  }
-
-  // ✅ Validate category
-  const categoryDoc = await Category.findById(category);
-  if (!categoryDoc) {
-    throw new AppError("Invalid category", 400);
   }
 
   // ✅ Prevent duplicate service title per entrepreneur
@@ -39,7 +32,6 @@ export const createService = asyncHandler(async (req, res) => {
     description,
     price,
     priceUnit,
-    category: categoryDoc._id,
     deliveryTime,
     isActive: true,
   });
@@ -51,73 +43,6 @@ export const createService = asyncHandler(async (req, res) => {
   });
 });
 
-export const getAllServices = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, search = "", category } = req.query;
-
-  const pageNum = Math.max(parseInt(page), 1);
-  const limitNum = Math.min(Math.max(parseInt(limit), 1), 50);
-  const skip = (pageNum - 1) * limitNum;
-
-  const matchStage = {
-    isActive: true,
-  };
-
-  /* 🔍 SEARCH (optimized using text index) */
-  if (search) {
-    matchStage.$text = { $search: search };
-  }
-
-  /* 📂 CATEGORY FILTER */
-  if (category) {
-    matchStage.category = category;
-  }
-
-  const pipeline = [
-    { $match: matchStage },
-
-    {
-      $facet: {
-        services: [
-          { $sort: { createdAt: -1 } },
-          { $skip: skip },
-          { $limit: limitNum },
-
-          /* 👇 populate replacement */
-          {
-            $lookup: {
-              from: "entrepreneurs",
-              localField: "entrepreneur",
-              foreignField: "_id",
-              as: "entrepreneur",
-            },
-          },
-          { $unwind: "$entrepreneur" },
-        ],
-
-        totalFiltered: [{ $count: "count" }],
-      },
-    },
-  ];
-
-  const result = await Service.aggregate(pipeline);
-
-  const services = result[0].services;
-  const totalFiltered = result[0].totalFiltered[0]?.count || 0;
-
-  res.status(200).json({
-    success: true,
-    message: "Services fetched successfully",
-    data: {
-      services,
-      page: pageNum,
-      limit: limitNum,
-      total: totalFiltered,
-      totalPages: Math.ceil(totalFiltered / limitNum),
-      results: services.length,
-    },
-  });
-});
-
 export const getServiceByEntrepreneurIdPublic = asyncHandler(
   async (req, res) => {
     const { id } = req.params;
@@ -126,11 +51,16 @@ export const getServiceByEntrepreneurIdPublic = asyncHandler(
       throw new AppError("Invalid ID", 400);
     }
 
+    const entrepreneur = await Entrepreneur.findOne({ user: id });
+    if (!entrepreneur) {
+      throw new AppError("Entrepreneur not found", 404);
+    }
+
     const service = await Service.find({
-      entrepreneur: id,
+      entrepreneur: entrepreneur._id,
       isActive: true,
     })
-      .select("-category -isActive -createdAt -updatedAt -__v -entrepreneur")
+      .select("-isActive -createdAt -updatedAt -__v -entrepreneur")
       .lean();
 
     if (!service) {
@@ -167,7 +97,6 @@ export const getMyServices = asyncHandler(async (req, res) => {
     matchStage.isActive = status === "Active";
   }
 
-  console.log(search);
 
   if (search) {
     matchStage.$text = { $search: search };

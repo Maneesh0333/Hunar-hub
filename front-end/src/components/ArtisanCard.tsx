@@ -23,19 +23,6 @@ export default function ArtisanCard({ artisan }: ArtisanCardProps) {
             ⭐ Top Pick
           </span>
 
-          <button
-            className="
-            absolute top-2.5 right-2.5
-            w-7 h-7 rounded-full
-            flex items-center justify-center
-            text-[14px] text-[#C4632A]
-            bg-white/90
-            transition
-            hover:scale-105
-          "
-          >
-            ♥
-          </button>
         </div>
 
         {/* Avatar */}

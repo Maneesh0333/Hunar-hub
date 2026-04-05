@@ -6,12 +6,14 @@ export default function NavBar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const user = useAuthStore(state=>state.accessToken);
   const [profileOpen, setProfileOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    function handleClickOutside(event: MouseEvent) {
+      if (!dropdownRef) return;
+      
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setProfileOpen(false);
       }
     }
@@ -21,7 +23,7 @@ export default function NavBar() {
 
   return (
     <nav
-      className="sticky top-0 z-50 w-full
+      className="sticky top-0 z-10 w-full
                  bg-[rgba(250,245,237,0.92)]
                  backdrop-blur-[12px]
                  border-b border-[rgba(196,99,42,0.12)]"
@@ -42,9 +44,9 @@ export default function NavBar() {
               🔔
             </button>
 
-            <button className="w-9 h-9 border border-[rgba(196,99,42,0.12)] rounded-lg  bg-[var(--white)] hover:border-[var(--clay)] cursor-pointer">
+            <Link to={'/user/chat'} className="w-9 h-9 flex items-center justify-center  border border-[rgba(196,99,42,0.12)] rounded-lg  bg-[var(--white)] hover:border-[var(--clay)] cursor-pointer">
               💬
-            </button>
+            </Link>
 
             <div className="relative" ref={dropdownRef}>
               <button
@@ -56,15 +58,15 @@ export default function NavBar() {
 
               {profileOpen && (
                 <div className="flex flex-col gap-1 absolute top-10 right-0 rounded-2xl border border-[rgba(196,99,42,0.12)] bg-white text-[var(--earth)] p-3">
-                  <span className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
+                  <Link to={"/user/profile"} className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
                     👤 My Profile
-                  </span>
-                  <span className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
+                  </Link>
+                  <Link to={"/user/orders"} className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
                     📦 My Orders
-                  </span>
-                  <span className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
+                  </Link>
+                  <Link to={"/user/wishlist"} className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
                     ❤️ Wishlist
-                  </span>
+                  </Link>
                   <span className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
                     🏆 Loyalty Points
                   </span>

@@ -86,6 +86,7 @@ export const login = asyncHandler(async (req, res) => {
   // Compare password
   const isMatch = await bcrypt.compare(password, user.password);
 
+  console.log(isMatch, "-----")
   if (!isMatch) {
     throw new AppError("Invalid email or password", 401);
   }
@@ -149,6 +150,7 @@ export const login = asyncHandler(async (req, res) => {
   // Fillter User
 
   const fillteredUser = {}
+  fillteredUser.id = user._id;
   fillteredUser.name = user.name;
   fillteredUser.email = user.email
   fillteredUser.phone = user.phone
@@ -160,7 +162,8 @@ export const login = asyncHandler(async (req, res) => {
     message: `Welcome back ${user.name}`,
     data: {
       accessToken,
-      user: fillteredUser
+      user: fillteredUser,
+      id: user._id
     }
   });
 });

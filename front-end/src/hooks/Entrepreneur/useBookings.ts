@@ -7,9 +7,10 @@ export type Booking = {
   _id: string;
   bookingId: string;
   totalAmount: number;
+  requirements: string;
   visitType: "visit_home" | "visit_workshop";
   status: "Pending" | "Confirmed" | "Declined" | "Completed" | "Cancelled";
-  paymentStatus: "Pending" | "Paid" | "Failed";
+  paymentStatus: "Pending" | "Paid" ;
   createdAt: string;
 
   customer: {
@@ -130,6 +131,47 @@ export const useUpdateBookingStatus = () => {
 
       toast.error(
         error.response?.data?.message ?? fallback[variables.status],
+      );
+    },
+  });
+};
+
+export const useUpdatePaymentStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ResponseType,
+    AxiosError<ResponseType>,
+    { id: string; paymentStatus: "Paid" }
+  >({
+    mutationFn: async ({ id, paymentStatus }) => {
+      const { data } = await axiosApi.patch<ResponseType>(
+        `/bookings/${id}/payment/status`,
+        { paymentStatus },
+      );
+      return data;
+    },
+
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(data.message ?? "Action failed");
+        return;
+      }
+
+      toast.success(data.message ?? "Payment Status updated");
+
+      // 🔄 Refetch bookings
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+
+    onError: (error) => {
+      if (!error.response) {
+        toast.error("Network error, please try again");
+        return;
+      }
+
+      toast.error(
+        error.response?.data?.message ?? "Action failed",
       );
     },
   });

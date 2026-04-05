@@ -1,16 +1,9 @@
+import type { ReviewUI } from "./Reviews";
 import { StarRating } from "./StarRating";
 
-type Review = {
-  avatar: string;
-  name: string;
-  rating: number;
-  date: string;
-  text: string;
-  service: string;
-};
 
 type ReviewCardProps = {
-  review: Review;
+  review: ReviewUI;
 };
 
 function ReviewCard({review}: ReviewCardProps) {

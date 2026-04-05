@@ -9,7 +9,6 @@ function SearchBar({ triggerSearch }: SearchBarProps) {
 
   const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
-    if (!query.trim()) return; // prevent empty search
     triggerSearch(query.trim());
   };
 

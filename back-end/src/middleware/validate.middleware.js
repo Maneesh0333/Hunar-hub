@@ -1,4 +1,3 @@
-import AppError from "../utils/AppError.js";
 import { asyncHandler } from "./async.middleware.js";
 
 export const validate = (schema) =>
@@ -12,8 +11,8 @@ export const validate = (schema) =>
       req.body = validatedData;
       next();
     } catch (err) {
-      return res.status(401).json({
-        status: false,
+      return res.status(400).json({
+        success: false,
         message: err.errors
       })
     }

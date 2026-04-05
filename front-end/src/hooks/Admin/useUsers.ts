@@ -50,16 +50,8 @@ export const useUsers = (status: string, search: string) => {
       };
     },
 
-    initialData: {
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 1,
-      results: 0,
-      totalUsers: 0,
-      stats: { Active: 0, Blocked: 0 },
-      users: [],
-    },
+    placeholderData: (prev) => prev,
+    refetchOnWindowFocus: false,
   });
 };
 

@@ -8,7 +8,7 @@ type propsTypes = {
   path: string;
 };
 
-export default function NavItem({ id, icon, label, badge, path }: propsTypes) {
+export default function NavItem({ icon, label, badge, path }: propsTypes) {
   const { pathname } = useLocation();
   return (
     <Link

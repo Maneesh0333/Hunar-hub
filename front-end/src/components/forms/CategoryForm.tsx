@@ -19,6 +19,19 @@ export const createCategorySchema = yup.object({
     .min(2, "Category name must be at least 2 characters")
     .max(30, "Category name cannot exceed 30 characters"),
 
+  icon: yup
+    .string()
+    .trim()
+    .required("Icon is required")
+    // Use a custom test to count actual visual emojis
+    .test("is-single-emoji", "Please add exactly one icon", (val) => {
+      if (!val) return false;
+      // This splits the string by visual characters (graphemes)
+      const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+      const count = [...segmenter.segment(val)].length;
+      return count === 1;
+    }),
+
   description: yup
     .string()
     .trim()
@@ -40,6 +53,18 @@ export const updateCategorySchema = yup.object({
     .min(2, "Category name must be at least 2 characters")
     .max(30, "Category name cannot exceed 30 characters"),
 
+  icon: yup
+    .string()
+    .trim()
+    // Use a custom test to count actual visual emojis
+    .test("is-single-emoji", "Please add exactly one icon", (val) => {
+      if (!val) return false;
+      // This splits the string by visual characters (graphemes)
+      const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+      const count = [...segmenter.segment(val)].length;
+      return count === 1;
+    }),
+    
   description: yup
     .string()
     .trim()
@@ -138,6 +163,15 @@ export default function CategoryForm({ category, closeSheet }: Props) {
     >
       <div className="flex flex-col gap-2">
         <InputField
+          label="Icon"
+          placeholder="Paste a Emoji"
+          inputClassName="!py-2 !px-3 text-sm"
+          name="icon"
+          errors={errors}
+          register={register}
+        />
+
+        <InputField
           label="Category Name"
           placeholder="Enter category name"
           inputClassName="!py-2 !px-3 text-sm"
@@ -177,7 +211,7 @@ export default function CategoryForm({ category, closeSheet }: Props) {
         type="submit"
         label={category ? "Update Category" : "Save Category"}
         className="w-full"
-        disabled={!isValid || !isDirty}
+        disabled={!isValid || !isDirty || category ? updateMudation.isPending : createMutation.isPending}
         isLoading={
           category ? updateMudation.isPending : createMutation.isPending
         }

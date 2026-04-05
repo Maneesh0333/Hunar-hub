@@ -35,13 +35,6 @@ const serviceSchema = new mongoose.Schema(
       default: "per_service",
     },
 
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-      required: true,
-      index: true,
-    },
-
     deliveryTime: {
       type: String,
       trim: true,
@@ -50,7 +43,18 @@ const serviceSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
-      index: true, 
+      index: true,
+    },
+    ratingsAverage: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+
+    ratingsQuantity: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true },

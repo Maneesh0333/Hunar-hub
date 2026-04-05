@@ -9,11 +9,22 @@ export const createCategorySchema = yup
       .min(2)
       .max(30),
 
+    icon: yup
+      .string()
+      .trim()
+      .test("is-single-emoji", "Please add exactly one icon", (val) => {
+        if (!val) return true;
+        const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+        const count = [...segmenter.segment(val)].length;
+        return count === 1;
+      }),
+
     description: yup.string().trim().max(100).notRequired(),
 
     status: yup.string().oneOf(["Active", "Inactive"]).default("Active"),
   })
   .noUnknown(true, "Unknown fields are not allowed");
+
 export const updateCategorySchema = yup
   .object({
     name: yup
@@ -21,6 +32,18 @@ export const updateCategorySchema = yup
       .trim()
       .min(2, "Category name must be at least 2 characters")
       .max(30, "Category name cannot exceed 30 characters"),
+
+    icon: yup
+      .string()
+      .trim()
+      // Use a custom test to count actual visual emojis
+      .test("is-single-emoji", "Please add exactly one icon", (val) => {
+        if (!val) return false;
+        // This splits the string by visual characters (graphemes)
+        const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+        const count = [...segmenter.segment(val)].length;
+        return count === 1;
+      }),
 
     description: yup
       .string()

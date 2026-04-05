@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosApi from "../../lib/axios";
 import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
-import type { ProfileFormValues } from "../../components/forms/EntrepreneurProfileForm";
 
 export type EntrepreneurProfile = {
   _id: string;
@@ -22,7 +21,7 @@ export type EntrepreneurProfile = {
   bio: string;
   about: string;
   city: string;
-
+  visitType: string[];
   skills: string[];
   payment: string[];
   category: {
@@ -30,12 +29,9 @@ export type EntrepreneurProfile = {
     name: string;
   };
   languages: string[];
-
   experienceYears: number;
-
   totalOrders: number;
   completedOrders: number;
-
   createdAt: string;
 };
 

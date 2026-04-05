@@ -1,11 +1,10 @@
-import { useState } from "react";
-import ArtisanCard from "./ArtisanCard";
+import { useRef, useState } from "react";
 import Reviews from "./Reviews";
 import ProfileHeader from "./ProfileHeader";
 import About from "./About";
 import Spinner from "./Shared/Spinner";
 import { useEntrepreneurPublicProfile } from "../hooks/User/useEntrepreneurPublicProfile";
-import { data, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ServicesOffered from "./User/ServicesOffered";
 import SideSheet from "./Shared/SideSheet";
 import Button from "./Auth/Button";
@@ -23,10 +22,10 @@ export default function ProfilePage() {
     error,
   } = useEntrepreneurPublicProfile(id);
 
-  const [selectedService, setSelectedService] = useState("");
   const [saved, setSaved] = useState(false);
   const [open, setOpen] = useState(false);
   const negative = useNavigate();
+  const bookRef = useRef<HTMLElement | null>(null);
 
   if (isLoading)
     return (
@@ -65,42 +64,51 @@ export default function ProfilePage() {
       </nav>
 
       {/* PROFILE HEADER */}
-      <ProfileHeader data={profileData} page="User" />
+      <ProfileHeader bookRef={bookRef} data={profileData} page="User" />
 
       {/* MAIN CONTENT */}
-      <main className="flex flex-col gap-5 px-5 py-5">
+      <main className="flex flex-col gap-5 p-5 max-md:p-3">
         {/* LEFT */}
-        <div className="space-y-6">
+        <div className="space-y-6 max-md:space-y-3">
           {/* ABOUT */}
           <About data={profileData} />
 
           {/* SERVICES */}
-          <ServicesOffered
-            id={id}
-            selectedService={selectedService}
-            setSelectedService={setSelectedService}
-          />
+          <ServicesOffered id={id} />
 
           {/* Reviews */}
-          <Reviews />
+          <Reviews entrepreneurId={id} />
 
           {/* BOOKING */}
-          <section className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6 h-fit">
-            <h3 className="font-serif text-lg font-bold mb-1">
-              📅 Book an Appointment
-            </h3>
-            <p className="text-xs text-gray-500 mb-4">
-              Slots confirmed within 30 minutes
-            </p>
-
-            <div className="bg-[#C4632A]/10 border border-[#C4632A]/30 rounded-xl p-4 mb-4">
-              <div className="font-semibold">Blouse Stitching</div>
-              <div className="text-xs text-[#5C3A1E]">⏱ 2-3 days</div>
-              <div className="mt-1 font-serif text-xl font-black text-[#C4632A]">
-                500
-              </div>
+          <section
+            ref={bookRef}
+            className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6 shadow-sm hover:shadow-md transition space-y-4"
+          >
+            {/* Header */}
+            <div>
+              <h3 className="font-serif text-lg font-bold flex items-center gap-2">
+                📅 Book Service
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Booking confirmed within 30 minutes
+              </p>
             </div>
 
+            {/* Trust badge */}
+            <div className="text-xs bg-green-50 text-green-700 border border-green-200 rounded-lg px-3 py-2 flex items-start gap-2">
+              <span>🛡️</span>
+              <span>
+                Book through our platform for <b>verified professionals</b>,
+                secure payments, and reliable support.
+              </span>
+            </div>
+
+            {/* Warning */}
+            <p className="text-[11px] text-gray-400">
+              ⚠️ For your safety, avoid booking outside the platform.
+            </p>
+
+            {/* CTA */}
             <Button
               label="Confirm Booking →"
               onClick={() => {
@@ -133,6 +141,13 @@ export default function ProfilePage() {
               <div className="text-[13px]">🗣️ Languages</div>
               <div className="text-[13px] text-[var(--ink)]">
                 {profileData?.languages.toString() || "Languages not added"}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)] text-[13px]">
+              <div>📱 Phone number</div>
+              <div className="text-[var(--ink)] font-medium">
+                {profileData?.user.phone || "Not provided"}
               </div>
             </div>
 
@@ -175,7 +190,7 @@ export default function ProfilePage() {
           </section>
         </div>
       </main>
-      
+
       <SideSheet
         open={open}
         onClose={() => {
@@ -184,7 +199,11 @@ export default function ProfilePage() {
         title={"Book Service"}
         discription={"Fill details to Book service"}
       >
-        <BookingForm servicesId={id} closeSheet={() => setOpen(false)} />
+        <BookingForm
+          visitType={profileData?.visitType}
+          servicesId={id}
+          closeSheet={() => setOpen(false)}
+        />
       </SideSheet>
     </div>
   );

@@ -6,7 +6,6 @@ const categorySchema = new mongoose.Schema(
     categoryId: {
       type: String,
       unique: true,
-      required: true,
     },
 
     name: {
@@ -15,6 +14,14 @@ const categorySchema = new mongoose.Schema(
       trim: true,
       minlength: 2,
       maxlength: 30,
+    },
+
+    icon: {
+      type: String,
+      trim: true,
+      required: [true, "Please provide an icon"],
+      minlength: 1,
+      maxlength: 20, 
     },
 
     description: {
@@ -30,12 +37,12 @@ const categorySchema = new mongoose.Schema(
       default: "Active",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 categorySchema.index(
   { name: 1 },
-  { unique: true, collation: { locale: "en", strength: 2 } }
+  { unique: true, collation: { locale: "en", strength: 2 } },
 );
 
 categorySchema.index({ status: 1, createdAt: -1 });

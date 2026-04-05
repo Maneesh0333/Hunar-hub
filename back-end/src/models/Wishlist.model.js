@@ -5,17 +5,18 @@ const wishlistSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      unique: true,
+      required: true,
     },
-
-    services: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Service",
-      },
-    ],
+    entrepreneur: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Entrepreneur",
+      required: true,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export default mongoose.model("Wishlist", wishlistSchema);
+wishlistSchema.index({ user: 1, entrepreneur: 1 }, { unique: true });
+
+const Wishlist = mongoose.model("Wishlist", wishlistSchema);
+export default Wishlist;

@@ -1,8 +1,10 @@
+import { useInfiniteReviews } from "../hooks/User/useReviews";
+import { useAuthStore } from "../stores/authStore";
 import RatingSummary from "./RatingSummary";
 import ReviewsContainer from "./ReviewsContainer";
-import { StarRating } from "./StarRating";
+import Spinner from "./Shared/Spinner";
 
-export type Review = {
+export type ReviewUI = {
   name: string;
   avatar: string;
   rating: number;
@@ -11,73 +13,70 @@ export type Review = {
   service: string;
 };
 
-type ReviewsData = {
-  average: number;
-  total: number;
-  breakdown: {
-    5: number;
-    4: number;
-    3: number;
-    2: number;
-    1: number;
-  };
-  reviews: Review[];
-};
-
-const reviewsData: ReviewsData = {
-  average: 4.5,
-  total: 138,
-  breakdown: {
-    5: 121,
-    4: 12,
-    3: 3,
-    2: 1,
-    1: 1,
-  },
-  reviews: [
-    {
-      name: "Priya Sharma",
-      avatar: "👩",
-      rating: 4,
-      date: "3 days ago",
-      text: "Rashida ji stitched my daughter's wedding blouse and it came out absolutely stunning. The fit was perfect and she even matched the embroidery thread exactly. Will definitely come back for the lehenga!",
-      service: "Blouse Stitching",
-    },
-    {
-      name: "Sana Mirza",
-      avatar: "👩‍💼",
-      rating: 5,
-      date: "1 week ago",
-      text: "She came home for measurements which was so convenient. The Chikankari dupatta she made was exquisite — people kept asking me where I got it from. 10/10 would recommend to everyone.",
-      service: "Chikankari Work",
-    },
-    {
-      name: "Arjun Mehta",
-      avatar: "👨",
-      rating: 4,
-      date: "2 weeks ago",
-      text: "Got my wife's salwar suit altered here after some weight loss. Quick turnaround — done in a day — and the stitching quality was great. Slight delay in communication but overall very happy.",
-      service: "Alteration & Repair",
-    },
-  ],
-};
-
 type ReviewsProps = {
   title?: string;
   titleRequired?: boolean;
+  entrepreneurId?: string;
 };
 
 export default function Reviews({
   title = "⭐ Customer Reviews",
   titleRequired = true,
+  entrepreneurId,
 }: ReviewsProps) {
-  const { average, total, breakdown, reviews } = reviewsData;
+  const user = useAuthStore((state) => state.user);
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useInfiniteReviews(entrepreneurId ? entrepreneurId : user?.id);
+
+  // 🔹 Flatten all pages
+  const allReviews = data?.pages.flatMap((page) => page.reviews) ?? [];
+
+  // 🔹 Backend stats (no frontend calculation needed now ✅)
+  const average = data?.pages[0]?.average ?? 0;
+  const total = data?.pages[0]?.total ?? 0;
+  const breakdown = data?.pages[0]?.breakdown ?? {
+    5: 0,
+    4: 0,
+    3: 0,
+    2: 0,
+    1: 0,
+  };
+
+  // 🔹 Map API → UI format
+  const reviews: ReviewUI[] = allReviews.map((r) => ({
+    name: r.customer.name,
+    avatar: "👤", // replace later with real avatar
+    rating: r.rating,
+    date: new Date(r.createdAt).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+    }),
+    text: r.comment,
+    service: r.service.title,
+  }));
+
+  if (isLoading)
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
+
+  if (allReviews.length == 0)
+    return (
+      <div className="flex h-full items-center justify-center">
+        No reviews yet
+      </div>
+    );
 
   return (
     <div className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6">
       {/* Title */}
       {titleRequired && (
-        <h3 className="mb-6 text-xl font-bold flex items-center gap-2">{title}</h3>
+        <h3 className="mb-6 text-xl font-bold flex items-center gap-2">
+          {title}
+        </h3>
       )}
 
       {/* Summary */}
@@ -87,9 +86,17 @@ export default function Reviews({
       <ReviewsContainer reviews={reviews} />
 
       {/* Load more */}
-      <button className="mt-6 w-full rounded-xl text-[var(--earth-mid)] border border-[rgba(196,99,42,0.12)] py-3 text-sm font-medium cursor-pointer transition-all duration-200">
-        Load More Reviews (135 more)
-      </button>
+      {hasNextPage && (
+        <button
+          onClick={() => fetchNextPage()}
+          disabled={isFetchingNextPage}
+          className="mt-6 w-full rounded-xl text-[var(--earth-mid)] border border-[rgba(196,99,42,0.12)] py-3 text-sm font-medium transition-all duration-200 hover:bg-[var(--cream)]"
+        >
+          {isFetchingNextPage
+            ? "Loading..."
+            : `Load More Reviews (${Math.max(total - reviews.length, 0)} more)`}
+        </button>
+      )}
     </div>
   );
 }

@@ -1,10 +1,9 @@
-import React from "react";
 import Categories from "../components/Categories";
 import { Link } from "react-router-dom";
 
 function UserHomePage() {
   return (
-    <>
+    <div className="flex flex-col">
       <section
         className="
       relative overflow-hidden
@@ -117,7 +116,7 @@ function UserHomePage() {
         </div>
       </section>
       <Categories />
-    </>
+    </div>
   );
 }
 

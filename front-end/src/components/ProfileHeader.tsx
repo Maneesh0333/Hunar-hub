@@ -1,23 +1,34 @@
+import { Link, useNavigate } from "react-router-dom";
 import type { EntrepreneurProfile } from "../hooks/Entrepreneur/useProfile";
+import { useIsWishlisted, useToggleWishlist } from "../hooks/User/useWishlist";
+import { useAuthStore } from "../stores/authStore";
 import Stat from "./Stat";
+import { useRef } from "react";
 
 type ProfileHeaderProp = {
   page: "Entrepreneur" | "User";
   data: EntrepreneurProfile | undefined;
   onEdit?: () => void;
+  bookRef: React.RefObject<HTMLElement | null>;
 };
 
-function ProfileHeader({ page, data, onEdit }: ProfileHeaderProp) {
+function ProfileHeader({ page, data, onEdit, bookRef }: ProfileHeaderProp) {
+  const { data: isWishlisted } = useIsWishlisted(data?._id);
+  const toggleWishlist = useToggleWishlist();
+
+  const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
+
   return (
     <>
       {/* COVER */}
-      <div className="h-56 bg-gradient-to-r from-[#3B1A06] via-[#8B3E15] to-[#C4632A]" />
+      <div className="h-56 max-md:h-32 bg-gradient-to-r from-[#3B1A06] via-[#8B3E15] to-[#C4632A]" />
 
       <section className="bg-white border-b px-6 pt-6 border-[rgba(196,99,42,0.12)]">
         <div className="flex flex-col md:flex-row gap-6 justify-between pb-6">
           <div className="flex-1">
             <div className="-mt-13 p-1 rounded-2xl bg-white w-fit ">
-              <div className="w-24 h-24 rounded-2xl bg-[#D4B896] flex items-center justify-center text-4xl shadow">
+              <div className="w-22 h-22 rounded-2xl bg-[#D4B896] flex items-center justify-center text-4xl shadow">
                 🧵
               </div>
             </div>
@@ -55,7 +66,9 @@ function ProfileHeader({ page, data, onEdit }: ProfileHeaderProp) {
               <div className="flex items-center">
                 <div className="text-xl">🏠</div>
                 <div className="text-xs text-[#5C3A1E]">
-                  Home visits available
+                  {data?.visitType.includes("visit_home")
+                    ? "Home visits available"
+                    : "Home visits not available"}
                 </div>
               </div>
             </div>
@@ -71,43 +84,51 @@ function ProfileHeader({ page, data, onEdit }: ProfileHeaderProp) {
           <div className="flex items-end  gap-3">
             <button
               onClick={
-                page === "User" ? () => console.log("User Action") : onEdit
+                page === "User"
+                  ? () => {
+                      if (!bookRef.current) return;
+
+                      bookRef.current.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      });
+                    }
+                  : onEdit
               }
-              className="px-8 py-3 h-fit bg-[var(--clay)] hover:bg-[var(--clay-dark)] text-white rounded-xl font-semibold shadow cursor-pointer hover:-translate-y-1 transition-all duration-200"
+              className="px-5 py-3 h-fit bg-[var(--clay)] hover:bg-[var(--clay-dark)] text-white rounded-xl font-semibold shadow cursor-pointer hover:-translate-y-1 transition-all duration-200"
             >
               {page === "User" ? "📅 Book Now" : "Edit Profile"}
             </button>
 
             {page === "User" && (
               <>
-                <button className="px-5 py-3 h-fit bg-[var(--cream)] border border-[rgba(196,99,42,0.12)] hover:border-[var(--clay)] cursor-pointer text-white rounded-xl font-bold">
+                <Link
+                  state={{
+                    entrepreneurId: data?.user._id,
+                  }}
+                  to={!!user ? `/user/chat` : "/auth"}
+                  className="px-5 py-3 h-fit bg-[var(--cream)] border border-[rgba(196,99,42,0.12)] hover:border-[var(--clay)] cursor-pointer text-white rounded-xl font-bold"
+                >
                   💬
-                </button>
+                </Link>
 
-                <button className="px-5 py-3 h-fit bg-[var(--cream)] border border-[rgba(196,99,42,0.12)] hover:border-[var(--clay)] cursor-pointer text-white rounded-xl font-bold">
-                  🤍
+                <button
+                  onClick={
+                    !!user
+                      ? () =>
+                          toggleWishlist.mutate({
+                            entrepreneurId: data?._id,
+                            isWishlisted: !!isWishlisted,
+                          })
+                      : () => navigate("/auth")
+                  }
+                  className="px-5 py-3 h-fit bg-[var(--cream)] border border-[rgba(196,99,42,0.12)] hover:border-[var(--clay)] cursor-pointer text-white rounded-xl font-bold"
+                >
+                  {isWishlisted ? "❤️" : "🤍"}
                 </button>
               </>
             )}
           </div>
-        </div>
-
-        <div className="mt-6 flex gap-3 border-t border-[rgba(196,99,42,0.12)] ">
-          <span className="inline-block text-[14px] text-[var(--clay)] px-5 py-3 font-semibold border-b-2 border-[var(--clay)]">
-            Overview
-          </span>
-
-          <span className="inline-block text-[14px] text-[var(--earth-mid)] px-5 py-3 font-semibold">
-            Services
-          </span>
-
-          <span className="inline-block text-[14px] text-[var(--earth-mid)] px-5 py-3 font-semibold">
-            Reviews
-          </span>
-
-          <span className="inline-block text-[14px] text-[var(--earth-mid)] px-5 py-3 font-semibold">
-            Availability
-          </span>
         </div>
       </section>
     </>

@@ -55,6 +55,13 @@ export const profileSchema = yup.object({
     .notRequired()
     .default(""),
 
+  visitType: yup
+    .array()
+    .of(yup.string().oneOf(["visit_home", "visit_workshop"]))
+    .max(2, "Max 2 visit type methods allowed")
+    .notRequired()
+    .default([]),
+
   skills: yup
     .string()
     .trim()
@@ -64,12 +71,13 @@ export const profileSchema = yup.object({
       const arr = value
         .split(",")
         .map((s) => s.trim())
-        .filter(Boolean);
+        .filter(Boolean)
+        .map((s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase());
 
       // Max limit
-      if (arr.length > 10) {
+      if (arr.length > 20) {
         return this.createError({
-          message: "You can add a maximum of 10 skills",
+          message: "You can add a maximum of 20 skills",
         });
       }
 
@@ -92,6 +100,52 @@ export const profileSchema = yup.object({
     })
     .notRequired()
     .default(""),
+
+  languages: yup
+    .string()
+    .trim()
+    .test("languages-validation", function (value) {
+      if (!value) return true;
+
+      const arr = value
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase());
+
+      // Max limit
+      if (arr.length > 10) {
+        return this.createError({
+          message: "You can add a maximum of 10 languages",
+        });
+      }
+
+      // Duplicate check
+      if (new Set(arr).size !== arr.length) {
+        return this.createError({
+          message: "Duplicate skills are not allowed",
+        });
+      }
+
+      // Length validation
+      const invalid = arr.find((s) => s.length < 2 || s.length > 30);
+      if (invalid) {
+        return this.createError({
+          message: `Each language must be between 2 and 30 characters (invalid: "${invalid}")`,
+        });
+      }
+
+      return true;
+    })
+    .notRequired()
+    .default(""),
+
+  payment: yup
+    .array()
+    .of(yup.string().oneOf(["Cash", "UPI"]))
+    .max(2, "Max 2 payment methods allowed")
+    .notRequired()
+    .default([]),
 
   category: yup.string().trim().notRequired().default(""),
 
@@ -141,9 +195,12 @@ export default function EntrepreneurProfileForm({
       bio: profile?.bio ?? "",
       about: profile?.about ?? "",
       city: profile?.city ?? "",
-      category: profile?.category._id ?? "",
+      category: profile?.category?._id ?? "",
+      languages: profile?.languages.toString() ?? "",
       experienceYears: profile?.experienceYears ?? 0,
       skills: profile?.skills.toString() ?? "",
+      payment: profile?.payment ?? [],
+      visitType: profile?.visitType ?? [],
     });
   }, [profile, reset]);
 
@@ -156,16 +213,26 @@ export default function EntrepreneurProfileForm({
         .filter(Boolean);
     }
 
+    let updatedLanguage: string[] = [];
+    if (data.languages && data.languages?.length > 0) {
+      updatedLanguage = data.languages
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+
     const updatedData: Partial<ProfileFormValues> = Object.fromEntries(
       Object.entries(data)
         .filter(([key]) => Object.keys(dirtyFields).includes(key))
-        .filter(([key]) => key !== "skills"),
+        .filter(([key]) => key !== "skills" && key !== "languages"),
     );
-
+    
     updateMutation.mutate(
       {
         ...updatedData,
         ...(dirtyFields.skills ? { skills: updatedSkills } : {}),
+        ...(dirtyFields.languages ? { languages: updatedLanguage } : {}),
       },
       {
         onSuccess: () => {
@@ -230,6 +297,42 @@ export default function EntrepreneurProfileForm({
           )}
         />
 
+        <Controller
+          name="payment"
+          control={control}
+          render={({ field, fieldState }) => (
+            <SelectInput
+              label="Payment Methods"
+              value={(field.value ?? []).filter((v): v is string => Boolean(v))}
+              onChange={field.onChange}
+              options={[
+                { label: "Cash", value: "Cash" },
+                { label: "UPI", value: "UPI" },
+              ]}
+              error={fieldState.error?.message}
+              multiple
+            />
+          )}
+        />
+
+        <Controller
+          name="visitType"
+          control={control}
+          render={({ field, fieldState }) => (
+            <SelectInput
+              label="Visit Type"
+              value={(field.value ?? []).filter((v): v is string => Boolean(v))}
+              onChange={field.onChange}
+              options={[
+                { label: "Home Visit", value: "visit_home" },
+                { label: "Workshop Visit", value: "visit_workshop" },
+              ]}
+              error={fieldState.error?.message}
+              multiple
+            />
+          )}
+        />
+
         <InputField
           label="Bio"
           name="bio"
@@ -251,7 +354,16 @@ export default function EntrepreneurProfileForm({
         <InputField
           label="Skills (comma separated)"
           name="skills"
-          placeholder="e.g Tailoring, Stitching (max 10 skills)"
+          placeholder="e.g Tailoring, Stitching (max 20 skills)"
+          register={register}
+          errors={errors}
+          inputClassName="!py-2 !px-3 text-sm"
+        />
+
+        <InputField
+          label="Languages (comma separated)"
+          name="languages"
+          placeholder="e.g English, Hindi (max 10 languages)"
           register={register}
           errors={errors}
           inputClassName="!py-2 !px-3 text-sm"
@@ -281,7 +393,7 @@ export default function EntrepreneurProfileForm({
         type="submit"
         label="Update Profile"
         className="absolute bottom-0 w-full"
-        disabled={!isValid || !isDirty}
+        disabled={!isValid || !isDirty || updateMutation.isPending}
         isLoading={updateMutation.isPending}
       />
     </form>

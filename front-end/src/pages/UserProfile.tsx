@@ -1,4 +1,21 @@
+import { useState } from "react";
+import SideSheet from "../components/Shared/SideSheet";
+import Spinner from "../components/Shared/Spinner";
+import { useProfile } from "../hooks/User/useProfile ";
+import UserProfileForm from "../components/forms/UserProfileForm";
+
 export default function UserProfile() {
+  const { data: profile, isLoading, isError, error } = useProfile();
+  const [open, setOpen] = useState(false);
+
+  if (isLoading)
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Spinner />
+      </div>
+    );
+  if (isError) return <div>Error: {error.message}</div>;
+
   return (
     <div className="flex-1 overflow-y-auto p-6 bg-[#FAF5ED] text-[#2C1A0E] space-y-6">
       {/* Header */}
@@ -16,13 +33,13 @@ export default function UserProfile() {
         </div>
 
         <div className="flex-1">
-          <div className="text-lg font-semibold">Priya Sharma</div>
+          <div className="text-lg font-semibold">{profile?.name}</div>
           <div className="text-sm text-[#6B4A2D]">
-            priya@email.com · +91 9XXXXXXXXX
+            {profile?.email} · {profile?.phone}
           </div>
         </div>
 
-        <button className="px-4 py-2 text-sm font-semibold rounded-lg border border-[var(--clay)] text-[var(--clay)] hover:bg-[var(--clay)] hover:text-white transition">
+        <button onClick={()=>setOpen(true)} className="px-4 py-2 text-sm cursor-pointer font-semibold rounded-lg border border-[var(--clay)] text-[var(--clay)] hover:bg-[var(--clay)] hover:text-white transition">
           Edit Profile
         </button>
       </section>
@@ -35,10 +52,10 @@ export default function UserProfile() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           {[
-            ["Full Name", "Priya Sharma"],
-            ["Email", "priya@email.com"],
-            ["Phone", "+91 9XXXXXXXXX"],
-            ["City", "Lucknow, UP"],
+            ["Full Name", profile?.name],
+            ["Email", profile?.email],
+            ["Phone", profile?.phone],
+            ["City", profile?.city || "City not added"],
           ].map(([label, value]) => (
             <div
               key={label}
@@ -53,14 +70,16 @@ export default function UserProfile() {
 
       {/* Preferences */}
       <section className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6">
-        <h2 className="font-serif font-bold text-lg mb-4">
-          ⚙️ Preferences
-        </h2>
+        <h2 className="font-serif font-bold text-lg mb-4">⚙️ Preferences</h2>
 
         <div className="space-y-4 text-sm">
           <label className="flex items-center justify-between">
             <span>Order Updates</span>
-            <input type="checkbox" defaultChecked className="accent-[var(--clay)]" />
+            <input
+              type="checkbox"
+              defaultChecked
+              className="accent-[var(--clay)]"
+            />
           </label>
 
           <label className="flex items-center justify-between">
@@ -70,7 +89,11 @@ export default function UserProfile() {
 
           <label className="flex items-center justify-between">
             <span>WhatsApp Alerts</span>
-            <input type="checkbox" defaultChecked className="accent-[var(--clay)]" />
+            <input
+              type="checkbox"
+              defaultChecked
+              className="accent-[var(--clay)]"
+            />
           </label>
         </div>
       </section>
@@ -85,6 +108,15 @@ export default function UserProfile() {
           Deactivate Account
         </button>
       </section>
+
+      <SideSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Edit Profile"
+        discription="Change the details to edit"
+      >
+        <UserProfileForm profile={profile} closeSheet={()=>setOpen(false)} />
+      </SideSheet>
     </div>
   );
 }

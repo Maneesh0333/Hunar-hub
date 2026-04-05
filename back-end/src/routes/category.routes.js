@@ -18,9 +18,10 @@ import { validate } from "../middleware/validate.middleware.js";
 
 const router = express.Router();
 
+router.get("/all", getAllCategories);
+
 router.use(isAuthenticated);
 
-router.get("/all", restrictTo("Entrepreneur"), getAllCategories);
 
 router.use(restrictTo("Admin"));
 router.get("/", getCategories);

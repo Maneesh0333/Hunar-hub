@@ -1,11 +1,14 @@
 import express from "express";
 import {
+  createReview,
   createSchedule,
   getAvailability,
   getDashboardStats,
   getEntrepreneurProfile,
   getEntrepreneurProfileById,
   getProfileCompletenessStats,
+  getReviews,
+  getReviewStats,
   getSchedule,
   getSearchEntrepreneurProfile,
   saveAvailability,
@@ -23,9 +26,15 @@ const router = express.Router();
 router.get("/search/profile", getSearchEntrepreneurProfile);
 router.get("/public/profile/:id", getEntrepreneurProfileById);
 
+router.get("/reviews/:id", getReviews);
+router.get("/stats/:id", getReviewStats);
 
-router.use(isAuthenticated, restrictTo("Entrepreneur"));
 
+router.use(isAuthenticated);
+router.post("/review", restrictTo("User"), createReview);
+
+
+router.use(restrictTo("Entrepreneur"));
 router.get("/dashboard", getDashboardStats);
 
 router.get("/profile", getEntrepreneurProfile);

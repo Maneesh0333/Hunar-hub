@@ -25,11 +25,6 @@ export const createServiceSchema = yup.object({
     .oneOf(["per_piece", "per_hour", "per_service"])
     .required("Price unit is required"),
 
-  category: yup
-    .string()
-    .trim()
-    .required("Category is required"),
-
   deliveryTime: yup
     .string()
     .trim()

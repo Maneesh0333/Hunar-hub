@@ -2,7 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosApi from "../../lib/axios";
 import toast from "react-hot-toast";
 import type { AxiosError } from "axios";
-import type { FormType, UpdateCategorySchemaType } from "../../components/forms/CategoryForm";
+import type {
+  FormType,
+  UpdateCategorySchemaType,
+} from "../../components/forms/CategoryForm";
 
 export type CategoriesStats = {
   Active: number;
@@ -12,6 +15,7 @@ export type CategoriesStats = {
 export type Category = {
   _id: string;
   categoryId: string;
+  icon: string;
   name: string;
   description: string;
   status: "Active" | "Inactive";
@@ -35,7 +39,10 @@ type ApiResponse = {
   data: CategoriesResponse;
 };
 
-export type CategoryLite = Pick<Category, "_id" | "name" | "categoryId">;
+export type CategoryLite = Pick<
+  Category,
+  "_id" | "name" | "categoryId" | "icon"
+>;
 
 type ApiResponseAllCategories = {
   success: boolean;
@@ -88,6 +95,8 @@ export const useAllCategories = () => {
         await axiosApi.get<ApiResponseAllCategories>("/categories/all");
       return data.data;
     },
+    placeholderData: (prev) => prev,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -99,11 +108,7 @@ export type ResponseType = {
 export const useCreateCategories = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    ResponseType,
-    AxiosError<ResponseType>,
-    FormType
-  >({
+  return useMutation<ResponseType, AxiosError<ResponseType>, FormType>({
     mutationFn: async (formData) => {
       const res = await axiosApi.post<ResponseType>("/categories", formData);
       return res.data;

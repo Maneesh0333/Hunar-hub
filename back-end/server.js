@@ -1,48 +1,31 @@
-import cluster from "cluster";
-import os from "os";
 import dotenv from "dotenv";
+import http from "http";
+
 import app from "./src/app.js";
 import { connectDB } from "./src/config/db.js";
+import { initSocket } from "./src/socket.js";
 
 dotenv.config();
 
-const numCPUs = os.cpus().length;
 const PORT = process.env.PORT || 5000;
-if (!PORT) {
-  throw new Error("PORT is not defined in environment variables");
-}
 
+const startServer = async () => {
+  try {
+    await connectDB();
 
-if (cluster.isPrimary) {
-  console.log(`Primary ${process.pid} is running`);
-  console.log(`Forking ${numCPUs} workers...\n`);
+    const server = http.createServer(app);
 
-  // Fork workers
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
+    // ✅ attach socket
+    initSocket(server);
+
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+
+  } catch (err) {
+    console.error("DB connection failed:", err);
+    process.exit(1);
   }
+};
 
-  // Restart dead workers
-  cluster.on("exit", (worker) => {
-    console.log(`Worker ${worker.process.pid} died. Restarting...`);
-    cluster.fork();
-  });
-
-} else {
-  // Each worker connects to DB
-  const startServer = async () => {
-    try {
-      await connectDB(); // ✅ each worker has its own DB connection
-
-      app.listen(PORT, () => {
-        console.log(`🚀 Worker ${process.pid} running on port ${PORT}`);
-      });
-
-    } catch (err) {
-      console.error("DB connection failed:", err);
-      process.exit(1);
-    }
-  };
-
-  startServer();
-}
+startServer();

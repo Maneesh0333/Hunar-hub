@@ -3,7 +3,7 @@ import Header from "../Shared/Header";
 import FilterChips from "../Shared/FilterChips";
 import SearchInput from "../Shared/SearchInput";
 import Table from "../Shared/Table";
-import { getChips } from "../../utils/entrepreneurFilters";
+import { getChips } from "../../utils/EntrepreneurFilters";
 import {
   useCategories,
   useDisableCategories,
@@ -14,6 +14,7 @@ import CategoriesRow from "./CategoriesRow";
 import SideSheet from "../Shared/SideSheet";
 import Button from "../Shared/Button";
 import CategoryForm from "../forms/CategoryForm";
+import Spinner from "../Shared/Spinner";
 
 export default function Categories() {
   const [activeFilter, setActiveFilter] = useState("All");
@@ -23,7 +24,10 @@ export default function Categories() {
     null,
   );
 
-  const { data, isLoading, isError } = useCategories(activeFilter, search);
+  const { data, isLoading, isError, isFetching } = useCategories(
+    activeFilter,
+    search,
+  );
 
   const enableMutation = useEnableCategories();
   const disableMutation = useDisableCategories();
@@ -35,11 +39,15 @@ export default function Categories() {
 
   const chips = getChips(data?.stats, data?.totalCategories);
 
-  if (isLoading) return <p>Loading...</p>;
-  if (isError) return <p>Error loading entrepreneurs</p>;
+  if (isError)
+    return (
+      <p className="flex-1 flex items-center justify-center">
+        Error loading Categories
+      </p>
+    );
 
   return (
-    <div className="flex-1 p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
+    <div className="flex-1 flex flex-col p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
       <Header
         title="Categories"
         description={`${data?.totalCategories} registered Categories`}
@@ -54,45 +62,54 @@ export default function Categories() {
         }
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <FilterChips
-          chips={chips.reverse()}
-          active={activeFilter}
-          onChange={setActiveFilter}
-        />
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <FilterChips
+              chips={chips.reverse()}
+              active={activeFilter}
+              onChange={setActiveFilter}
+            />
 
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search entrepreneur..."
-          className="w-70 max-lg:w-full"
-        />
-      </div>
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Search entrepreneur..."
+              className="w-70 max-lg:w-full"
+            />
+          </div>
 
-      <Table
-        headers={[
-          "Category Id",
-          "Name",
-          "Description",
-          "Status",
-          "Created",
-          "Actions",
-        ]}
-        data={users}
-        colSpan={6}
-        renderRow={(item) => (
-          <CategoriesRow
-            key={item._id}
-            item={item}
-            disableMutation={disableMutation}
-            enableMutation={enableMutation}
-            onEdit={(cat) => {
-              setSelectedCategory(cat);
-              setOpen(true);
-            }}
+          <Table
+            headers={[
+              "Category Id",
+              "Name",
+              "Description",
+              "Status",
+              "Created",
+              "Actions",
+            ]}
+            data={users}
+            colSpan={6}
+            isFetching={isFetching}
+            renderRow={(item) => (
+              <CategoriesRow
+                key={item._id}
+                item={item}
+                disableMutation={disableMutation}
+                enableMutation={enableMutation}
+                onEdit={(cat) => {
+                  setSelectedCategory(cat);
+                  setOpen(true);
+                }}
+              />
+            )}
           />
-        )}
-      />
+        </>
+      )}
 
       <SideSheet
         open={open}

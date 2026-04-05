@@ -94,7 +94,7 @@ function Register({ setCurrentStep, setEmail }: RegisterProps) {
         return;
       }
 
-      const { status, data } = error.response as {
+      const {  data } = error.response as {
         status: number;
         data: RegisterResponse;
       };
