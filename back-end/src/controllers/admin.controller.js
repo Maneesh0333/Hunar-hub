@@ -5,26 +5,38 @@ import Service from "../models/Service.model.js";
 import AppError from "../utils/AppError.js";
 import { asyncHandler } from "../middleware/async.middleware.js";
 import mongoose from "mongoose";
+import Review from "../models/Review.model.js";
 
 export const getUsers = asyncHandler(async (req, res) => {
   const { status = "All", page = 1, limit = 5, search = "" } = req.query;
 
-  const pageNum = Math.max(parseInt(page), 1);
-  const limitNum = Math.max(parseInt(limit), 1);
+  /* ---------------- Pagination ---------------- */
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(20, Math.max(1, Number(limit)));
   const skip = (pageNum - 1) * limitNum;
 
-  const query = {
-    role: "User",
-    $or: [
-      { name: { $regex: search, $options: "i" } },
-      { email: { $regex: search, $options: "i" } },
-      { phone: { $regex: search, $options: "i" } },
-    ],
-  };
+  /* ---------------- Query ---------------- */
+  const query = { role: "User" };
 
   if (status !== "All") {
     query.status = status;
   }
+
+  if (search.trim()) {
+    const regex = new RegExp(search, "i");
+
+    query.$or = [{ name: regex }, { email: regex }, { phone: regex }];
+  }
+
+  /* ---------------- Promises ---------------- */
+  const usersPromise = User.find(query)
+    .select("-role -signupAs")
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limitNum);
+
+  const totalFilteredPromise = User.countDocuments(query);
+  const totalUsersPromise = User.countDocuments({ role: "User" });
 
   const statsPromise = User.aggregate([
     { $match: { role: "User" } },
@@ -36,31 +48,22 @@ export const getUsers = asyncHandler(async (req, res) => {
     },
   ]);
 
-  const usersPromise = User.find(query)
-    .select("-role -signupAs")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limitNum);
-
-  const totalFilteredPromise = User.countDocuments(query);
-  const totalUsersPromise = User.countDocuments({ role: "User" });
-
-  const [users, totalFiltered, totalUsers, statsAgg] = await Promise.all([
+  /* ---------------- Execute ---------------- */
+  const [users, totalFiltered, totalUsers, statsArray] = await Promise.all([
     usersPromise,
     totalFilteredPromise,
     totalUsersPromise,
     statsPromise,
   ]);
 
-  const stats = {
-    Active: 0,
-    Blocked: 0,
-  };
+  /* ---------------- Stats ---------------- */
+  let stats = { Active: 0, Blocked: 0 };
 
-  statsAgg.forEach((s) => {
+  statsArray.forEach((s) => {
     stats[s._id] = s.count;
   });
 
+  /* ---------------- Response ---------------- */
   res.status(200).json({
     success: true,
     message: "Fetched Successfully",
@@ -78,7 +81,9 @@ export const getUsers = asyncHandler(async (req, res) => {
 });
 
 export const blockUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const id = req.params.id
+
+  const user = await User.findById(id).select("_id role status");
 
   if (!user) {
     throw new AppError("User not found", 404);
@@ -98,7 +103,9 @@ export const blockUser = asyncHandler(async (req, res) => {
 });
 
 export const unblockUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const id = req.params.id
+
+  const user = await User.findById(id).select("_id status");
 
   if (!user) {
     throw new AppError("User not found", 404);
@@ -256,10 +263,6 @@ export const getEntrepreneurs = asyncHandler(async (req, res) => {
 export const approveEntrepreneur = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new AppError("Invalid Id", 400);
-  }
-
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -309,10 +312,6 @@ export const approveEntrepreneur = asyncHandler(async (req, res) => {
 export const rejectEntrepreneur = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new AppError("Invalid Id", 400);
-  }
-
   const entrepreneur =
     await Entrepreneur.findById(id).select("verificationStatus");
 
@@ -349,187 +348,6 @@ export const getAllServicesAdmin = asyncHandler(async (req, res) => {
     success: true,
     results: services.length,
     data: services,
-  });
-});
-
-export const getAllBookingsAdmin = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, search = "", status = "All" } = req.query;
-
-  const pageNum = Math.max(parseInt(page), 1);
-  const limitNum = Math.min(Math.max(parseInt(limit), 1), 50);
-  const skip = (pageNum - 1) * limitNum;
-
-  /* ---------------- FILTER OBJECT ---------------- */
-
-  const filterMatch = {};
-
-  // 🔍 Search
-  if (search) {
-    filterMatch.$or = [
-      { bookingId: { $regex: search, $options: "i" } },
-      { "service.title": { $regex: search, $options: "i" } },
-      { "customer.name": { $regex: search, $options: "i" } },
-      { "entrepreneur.user.name": { $regex: search, $options: "i" } },
-    ];
-  }
-
-  // 🚦 Status filter
-  if (status !== "All") {
-    filterMatch.status = status;
-  }
-
-  /* ---------------- PIPELINE ---------------- */
-
-  const pipeline = [
-    /* 🔗 SERVICE */
-    {
-      $lookup: {
-        from: "services",
-        localField: "service",
-        foreignField: "_id",
-        as: "service",
-      },
-    },
-    { $unwind: { path: "$service", preserveNullAndEmptyArrays: true } },
-
-    /* 🔗 ENTREPRENEUR */
-    {
-      $lookup: {
-        from: "entrepreneurs",
-        localField: "entrepreneur",
-        foreignField: "_id",
-        as: "entrepreneur",
-      },
-    },
-    { $unwind: { path: "$entrepreneur", preserveNullAndEmptyArrays: true } },
-
-    /* 🔗 ENTREPRENEUR USER */
-    {
-      $lookup: {
-        from: "users",
-        localField: "entrepreneur.user",
-        foreignField: "_id",
-        as: "entrepreneurUser",
-      },
-    },
-    {
-      $unwind: {
-        path: "$entrepreneurUser",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-
-    /* 🔗 CUSTOMER */
-    {
-      $lookup: {
-        from: "users",
-        localField: "customer",
-        foreignField: "_id",
-        as: "customer",
-      },
-    },
-    {
-      $unwind: {
-        path: "$customer",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-
-    /* 🧠 MERGE USER INTO ENTREPRENEUR */
-    {
-      $addFields: {
-        "entrepreneur.user": "$entrepreneurUser",
-      },
-    },
-
-    /* ---------------- FACET ---------------- */
-
-    {
-      $facet: {
-        /* 📦 BOOKINGS (FILTERED) */
-        bookings: [
-          { $match: filterMatch },
-          { $sort: { createdAt: -1 } },
-          { $skip: skip },
-          { $limit: limitNum },
-
-          {
-            $project: {
-              _id: 1,
-              bookingId: 1,
-              totalAmount: 1,
-              visitType: 1,
-              status: 1,
-              paymentStatus: 1,
-              createdAt: 1,
-
-              "service.title": 1,
-
-              "customer.name": 1,
-              "customer.phone": 1,
-
-              "entrepreneur.user.name": 1,
-            },
-          },
-        ],
-
-        /* 🔢 TOTAL FILTERED */
-        totalFiltered: [{ $match: filterMatch }, { $count: "count" }],
-
-        /* 🔢 TOTAL ALL */
-        total: [{ $count: "count" }],
-
-        /* 📊 GLOBAL STATS (UNFILTERED) */
-        stats: [
-          {
-            $group: {
-              _id: "$status",
-              count: { $sum: 1 },
-            },
-          },
-        ],
-      },
-    },
-  ];
-
-  /* ---------------- EXECUTE ---------------- */
-
-  const result = await Booking.aggregate(pipeline);
-
-  const bookings = result[0]?.bookings || [];
-  const total = result[0]?.total[0]?.count || 0;
-  const totalFiltered = result[0]?.totalFiltered[0]?.count || 0;
-  const statsArray = result[0]?.stats || [];
-
-  /* ---------------- FORMAT STATS ---------------- */
-
-  const stats = {
-    Pending: 0,
-    Confirmed: 0,
-    Declined: 0,
-    Completed: 0,
-    Cancelled: 0,
-  };
-
-  statsArray.forEach((s) => {
-    stats[s._id] = s.count;
-  });
-
-  /* ---------------- RESPONSE ---------------- */
-
-  res.status(200).json({
-    success: true,
-    message: "Admin bookings fetched successfully",
-    data: {
-      bookings,
-      stats,
-      total, // all bookings
-      totalFiltered, // filtered count
-      page: pageNum,
-      limit: limitNum,
-      totalPages: Math.ceil(totalFiltered / limitNum),
-      results: bookings.length,
-    },
   });
 });
 
@@ -704,5 +522,101 @@ export const getAdminDashboard = asyncHandler(async (req, res) => {
         growth,
       },
     },
+  });
+});
+
+export const getReviews = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 5, search = "", rating = "All" } = req.query;
+
+  /* ---------------- Pagination ---------------- */
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(20, Math.max(1, Number(limit)));
+  const skip = (pageNum - 1) * limitNum;
+
+  /* ---------------- Query ---------------- */
+  const match = {};
+
+  if (rating !== "All") {
+    match.rating = Number(rating);
+  }
+
+  if (search.trim()) {
+    const regex = new RegExp(search, "i");
+
+    match.$or = [
+      { comment: regex },
+    ];
+  }
+
+  /* ---------------- Promises ---------------- */
+  const reviewsPromise = Review.find(match)
+    .populate("customer", "name email")
+    .populate({
+      path: "entrepreneur",
+      populate: { path: "user", select: "name" },
+    })
+    .populate("service", "title")
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limitNum);
+
+  const totalFilteredPromise = Review.countDocuments(match);
+  const totalReviewsPromise = Review.countDocuments();
+
+  const statsPromise = Review.aggregate([
+    {
+      $group: {
+        _id: "$rating",
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  /* ---------------- Execute ---------------- */
+  const [reviews, totalFiltered, totalReviews, statsArray] =
+    await Promise.all([
+      reviewsPromise,
+      totalFilteredPromise,
+      totalReviewsPromise,
+      statsPromise,
+    ]);
+
+  /* ---------------- Stats ---------------- */
+  let stats = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+  statsArray.forEach((s) => {
+    stats[s._id] = s.count;
+  });
+
+  /* ---------------- Response ---------------- */
+  res.status(200).json({
+    success: true,
+    message: "Fetched Successfully",
+    data: {
+      reviews,
+      stats,
+      page: pageNum,
+      limit: limitNum,
+      total: totalFiltered,
+      totalReviews,
+      totalPages: Math.ceil(totalFiltered / limitNum),
+      results: reviews.length,
+    },
+  });
+});
+
+/* ================= DELETE REVIEW ================= */
+export const deleteReview = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const review = await Review.findByIdAndDelete(id);
+
+  if (!review) {
+    throw new AppError("Review not found", 404);
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Review deleted successfully",
   });
 });

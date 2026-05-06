@@ -1,14 +1,13 @@
+import type { Message } from "../hooks/User/useChat";
+
 export const getMessageStatus = (
-  msg: any,
-  currentUserId: string | undefined,
+  msg: Message,
+  currentUserId?: string,
+  otherUserId?: string
 ) => {
-  if (!currentUserId) return;
-  const isMine = msg.sender._id === currentUserId;
+  if (!currentUserId || !otherUserId) return "";
 
-  if (!isMine) return "";
+  if (msg.sender._id !== currentUserId) return "";
 
-  if (msg.readBy.length === 1) return "✓"; // sent
-  if (msg.readBy.length > 1) return "✓✓"; // seen
-
-  return "";
+  return msg.readBy.includes(otherUserId) ? "✓✓" : "✓";
 };

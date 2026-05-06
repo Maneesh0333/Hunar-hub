@@ -107,7 +107,6 @@ export const useInfiniteReviews = (
   return useInfiniteQuery<ReviewsResponse, Error>({
     queryKey: ["reviews", entrepreneurId],
 
-    // ✅ required in v5
     initialPageParam: 1,
 
     queryFn: async ({ pageParam }) => {

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ArtisanCard from "./ArtisanCard";
 import NavBar from "./NavBar";
 import Toggle from "./Toggle";
@@ -9,6 +9,7 @@ import { useAllCategories } from "../hooks/Admin/useCategories";
 import Spinner from "./Shared/Spinner";
 import { useMediaQuery } from "react-responsive";
 import { SlidersHorizontal } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 const RatingFilterOption = [
   { key: "Any", label: "Any Rating" },
@@ -17,20 +18,21 @@ const RatingFilterOption = [
 ];
 
 export default function SearchArtisansPage() {
+  const location = useLocation();
+  const filter = location.state;
+
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
+  const [category, setCategory] = useState(filter?.category || "All");
   const [rating, setRating] = useState("Any");
   const [availability, setAvailability] = useState({
     "Available Today": false,
     "Home Service": false,
   });
 
-  console.log(availability, "++++++");
-
   const [open, setOpen] = useState(false);
   const mobile = useMediaQuery({ maxWidth: 768 });
 
-  const { data: searchResult, isLoading: isLoadingSearchResult } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useSearchEntrepreneurs(
       search,
       category,
@@ -39,14 +41,36 @@ export default function SearchArtisansPage() {
       availability["Home Service"],
     );
 
+  const entrepreneurs =
+    data?.pages.flatMap((page) => page.data.entrepreneurs) || [];
+
+  const total = data?.pages?.[0]?.pagination?.total || 0;
+
   const { data: categories = [], isLoading: isLoadingCategories } =
     useAllCategories();
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    });
+
+    observer.observe(el);
+
+    return () => observer.unobserve(el);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div className="min-h-screen bg-[var(--cream)] text-[var(--earth)]">
       <NavBar />
 
-      <section className="px-10 pt-12 pb-6 bg-gradient-to-br from-[var(--earth)] to-[#3D1F09]">
+      <section className="px-10 pt-12 pb-6 max-md:px-6 bg-gradient-to-br from-[var(--earth)] to-[#3D1F09]">
         <h1 className="font-playfair text-white text-4xl font-black">
           Find{" "}
           <em className="italic text-[var(--clay-light)]">Skilled Artisans</em>{" "}
@@ -57,61 +81,11 @@ export default function SearchArtisansPage() {
         </p>
 
         <SearchBar triggerSearch={(query) => setSearch(query)} />
-
-        {/* Search Bar */}
-        <div
-          className="mt-5 flex flex-col lg:flex-row
-                   bg-white rounded-xl overflow-hidden
-                   border border-[var(--clay)]/20
-                   shadow-[0_8px_30px_rgba(0,0,0,0.06)]"
-        >
-          <input
-            type="text"
-            placeholder="Search by skill, artisan name or location..."
-            className="flex-1 px-5 py-4 text-sm
-                     text-[var(--earth)]
-                     focus:outline-none"
-          />
-
-          <select
-            className="px-5 py-4 text-sm text-[var(--earth-mid)]
-                     bg-transparent cursor-pointer
-                     border-t lg:border-t-0 lg:border-l
-                     border-black/10 focus:outline-none"
-          >
-            <option>All Categories</option>
-            <option>Cobbler</option>
-            <option>Tailor</option>
-            <option>Potter</option>
-            <option>Weaver</option>
-          </select>
-
-          <select
-            className="px-5 py-4 text-sm text-[var(--earth-mid)]
-                     bg-transparent cursor-pointer
-                     border-t lg:border-t-0 lg:border-l
-                     border-black/10 focus:outline-none"
-          >
-            <option>Near Me</option>
-            <option>Within 5km</option>
-            <option>Within 20km</option>
-            <option>Citywide</option>
-          </select>
-
-          <button
-            className="px-7 py-4 text-[15px] font-semibold text-white
-                     bg-[var(--clay)]
-                     hover:bg-[var(--clay-dark)]
-                     transition"
-          >
-            Search
-          </button>
-        </div>
       </section>
 
       {/* ------------------------------ LAYOUT ------------------------------ */}
       <main className="flex max-md:flex-col">
-        <div className="hidden p-3 border-b border-[rgba(196,99,42,0.12)] max-md:flex">
+        <div className="hidden px-10 py-3 max-md:px-6 border-b border-[rgba(196,99,42,0.12)] max-md:flex">
           <span
             onClick={() => setOpen((prev) => !prev)}
             className="border cursor-pointer border-[var(--border-1)] p-2 w-fit flex rounded-md"
@@ -128,6 +102,7 @@ export default function SearchArtisansPage() {
                 : "translate-y-full"
               : "translate-y-0"
           }`}
+          style={{ scrollbarWidth: "none" }}
         >
           <div className="w-full flex items-end justify-end-safe">
             <button
@@ -162,7 +137,7 @@ export default function SearchArtisansPage() {
                         <input
                           type="checkbox"
                           checked={category === c._id}
-                          onClick={() => setCategory(c._id)}
+                          onChange={() => setCategory(c._id)}
                           className="accent-[var(--clay)] w-[18px] h-[18px] rounded-2xl"
                         />
                       </div>
@@ -223,26 +198,43 @@ export default function SearchArtisansPage() {
 
         {/* ----------------------------- RESULTS ----------------------------- */}
         <section className="flex-3 flex flex-col min-h-60">
-          {isLoadingSearchResult ? (
+          {isLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <Spinner />
             </div>
           ) : (
             <>
-              {searchResult?.entrepreneurs &&
-              searchResult?.entrepreneurs.length > 0 ? (
+              {entrepreneurs && entrepreneurs.length > 0 ? (
                 <>
                   <div className="px-6 py-4 bg-[var(--warm)] border-b border-[rgba(196,99,42,0.12)]">
-                    Showing{" "}
-                    <strong className="text-[var(--clay)]">24 artisans</strong>{" "}
-                    for "Tailor"
+                    {search ? (
+                      <>
+                        Showing{" "}
+                        <strong className="text-[var(--clay)]">{total}</strong>{" "}
+                        Results for "{search}"
+                      </>
+                    ) : (
+                      <>
+                        Showing{" "}
+                        <strong className="text-[var(--clay)]">
+                          {total} artisans
+                        </strong>{" "}
+                      </>
+                    )}
                   </div>
 
-                  <div className="grid gap-6 grid-cols-2 max-sm:grid-cols-1 p-10">
-                    {searchResult?.entrepreneurs.map((a) => (
+                  <div className="grid gap-6 grid-cols-2 max-sm:grid-cols-1 p-10 max-md:p-6">
+                    {entrepreneurs.map((a) => (
                       <ArtisanCard key={a._id} artisan={a} />
                     ))}
                   </div>
+                  <div ref={loadMoreRef} />
+
+                  {isFetchingNextPage && (
+                    <div className="flex justify-center py-4">
+                      <Spinner />
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="flex-1 flex items-center justify-center">

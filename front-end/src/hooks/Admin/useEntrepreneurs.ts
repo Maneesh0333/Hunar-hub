@@ -1,8 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosApi from "../../lib/axios";
-import type { BlockUnblockResponseType } from "./useUsers";
 import toast from "react-hot-toast";
 import type { AxiosError } from "axios";
+
+type ResponseType = {
+  success: boolean;
+  message: string;
+};
 
 export type Entrepreneur = {
   _id: string;
@@ -42,57 +46,40 @@ type EntrepreneursResponse = {
   entrepreneurs: Entrepreneur[];
 };
 
-type ResponseType = {
+type QueryResponseType = {
   success: boolean;
   message: string;
   data: EntrepreneursResponse;
 };
 
 export const useEntrepreneurs = (
-  status: string,
-  search: string,
+  status: string = "All",
+  search: string = "",
+  page: number = 1,
   view: "entrepreneurs" | "applications",
+  limit: number = 5,
 ) => {
-  return useQuery({
-    queryKey: ["entrepreneurs", status, search],
+  return useQuery<EntrepreneursResponse, AxiosError<ResponseType>>({
+    queryKey: ["entrepreneurs", status, search, page],
     queryFn: async () => {
-      const res = await axiosApi.get<ResponseType>(
-        `/admin/entrepreneurs?status=${status}&search=${search}&view=${view}`,
+      const res = await axiosApi.get<QueryResponseType>(
+        `/admin/entrepreneurs?status=${status}&search=${search}&view=${view}&page=${page}&limit=${limit}`,
       );
 
-      const data = res.data?.data;
-
-      return {
-        page: data?.page ?? 1,
-        limit: data?.limit ?? 10,
-        total: data?.total ?? 0,
-        totalEntrepreneurs: data?.totalEntrepreneurs ?? 0,
-        totalPages: data?.totalPages ?? 1,
-        results: data?.results ?? 0,
-        stats: data?.stats ?? { Pending: 0, Approved: 0, Rejected: 0 },
-        entrepreneurs: data?.entrepreneurs ?? [],
-      };
+      return res.data?.data;
     },
     placeholderData: (prev) => prev,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
-};
-
-type ApproveRejectResponseType = {
-  success: boolean;
-  message: string;
 };
 
 export const useApproveEntrepreneur = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    ApproveRejectResponseType,
-    AxiosError<ApproveRejectResponseType>,
-    string
-  >({
+  return useMutation<ResponseType, AxiosError<ResponseType>, string>({
     mutationFn: async (id) => {
-      const res = await axiosApi.patch<ApproveRejectResponseType>(
+      const res = await axiosApi.patch<ResponseType>(
         `/admin/entrepreneurs/${id}/approve`,
       );
       return res.data;
@@ -125,13 +112,9 @@ export const useApproveEntrepreneur = () => {
 export const useRejectEntrepreneur = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    ApproveRejectResponseType,
-    AxiosError<ApproveRejectResponseType>,
-    string
-  >({
+  return useMutation<ResponseType, AxiosError<ResponseType>, string>({
     mutationFn: async (id) => {
-      const res = await axiosApi.patch<ApproveRejectResponseType>(
+      const res = await axiosApi.patch<ResponseType>(
         `/admin/entrepreneurs/${id}/reject`,
       );
       return res.data;
@@ -164,13 +147,9 @@ export const useRejectEntrepreneur = () => {
 export const useBlockEntrepreneur = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    BlockUnblockResponseType,
-    AxiosError<BlockUnblockResponseType>,
-    string
-  >({
+  return useMutation<ResponseType, AxiosError<ResponseType>, string>({
     mutationFn: async (id) => {
-      const res = await axiosApi.patch<BlockUnblockResponseType>(
+      const res = await axiosApi.patch<ResponseType>(
         `/admin/users/${id}/block`,
       );
       return res.data;
@@ -203,13 +182,9 @@ export const useBlockEntrepreneur = () => {
 export const useUnblockEntrepreneur = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    BlockUnblockResponseType,
-    AxiosError<BlockUnblockResponseType>,
-    string
-  >({
+  return useMutation<ResponseType, AxiosError<ResponseType>, string>({
     mutationFn: async (id) => {
-      const res = await axiosApi.patch<BlockUnblockResponseType>(
+      const res = await axiosApi.patch<ResponseType>(
         `/admin/users/${id}/unblock`,
       );
       return res.data;

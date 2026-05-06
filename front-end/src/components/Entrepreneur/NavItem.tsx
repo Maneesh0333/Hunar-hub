@@ -13,6 +13,7 @@ export default function NavItem({ icon, label, badge, path }: propsTypes) {
   return (
     <Link
       to={path}
+      state={path === "/entrepreneur/messages" && { openList: true }}
       className={`group flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition w-full
         ${
           pathname === path

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosApi from "../../lib/axios";
 import toast from "react-hot-toast";
 import type { AxiosError } from "axios";
-import type { UserProfileFormValues } from "../../components/forms/UserProfileForm";
+import type { UserProfileFormValues } from "../../types/user/types";
 
 export type Profile = {
   _id: string;

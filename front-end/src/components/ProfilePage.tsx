@@ -10,6 +10,10 @@ import SideSheet from "./Shared/SideSheet";
 import Button from "./Auth/Button";
 import BookingForm from "./forms/BookingForm";
 import { useAuthStore } from "../stores/authStore";
+import NavBar from "./NavBar";
+import NoInternet from "../pages/NoInternet";
+import { useNetworkStatus } from "../hooks/Shared/useNetworkStatus";
+import ErrorState from "../pages/ErrorState";
 
 export default function ProfilePage() {
   const { id } = useParams();
@@ -19,177 +23,160 @@ export default function ProfilePage() {
     data: profileData,
     isLoading,
     isError,
-    error,
+    refetch,
+    isFetching,
   } = useEntrepreneurPublicProfile(id);
 
-  const [saved, setSaved] = useState(false);
   const [open, setOpen] = useState(false);
   const negative = useNavigate();
+  const isOnline = useNetworkStatus();
+
   const bookRef = useRef<HTMLElement | null>(null);
 
-  if (isLoading)
-    return (
-      <div className="flex items-center justify-center h-screen w-full">
-        <Spinner />
-      </div>
-    );
-  if (isError) return <div>{error.message}</div>;
+  if (!isOnline) {
+    return <NoInternet />;
+  }
 
   return (
     <div className="min-h-screen bg-[#FAF5ED] text-[#2C1A0E]">
       {/* NAVBAR */}
-      <nav className="sticky top-0 z-50 flex items-center gap-4 px-6 py-4 bg-[#FAF5ED]/95 backdrop-blur border-b">
-        <div className="font-serif text-xl font-black text-[#C4632A]">
-          Hunar<span className="text-[#2C1A0E]">Hub</span>
+      <NavBar />
+
+      {isLoading ? (
+        <div className="h-[85vh] flex items-center justify-center w-full">
+          <Spinner />
         </div>
-
-        <div className="hidden md:flex text-sm text-[#5C3A1E] gap-1">
-          <span className="text-[#C4632A] cursor-pointer">Home</span> ›
-          <span className="text-[#C4632A] cursor-pointer">Tailors</span> ›
-          <span>Rashida Begum</span>
+      ) : isError ? (
+        <div className="h-[85vh] flex items-center justify-center w-full">
+          <ErrorState
+            message="Failed to load Entrepreneur Profile"
+            onRetry={refetch}
+            isLoading={isFetching}
+          />
         </div>
+      ) : (
+        <>
+          <ProfileHeader bookRef={bookRef} data={profileData} page="User" />
 
-        <div className="ml-auto flex gap-2">
-          <button className="w-9 h-9 border rounded-lg">🔗</button>
-          <button
-            className="w-9 h-9 border rounded-lg"
-            onClick={() => setSaved(!saved)}
-          >
-            {saved ? "❤️" : "🤍"}
-          </button>
-          <button className="px-4 py-2 bg-[#C4632A] text-white rounded-lg text-sm font-semibold">
-            Post a Request
-          </button>
-        </div>
-      </nav>
+          {/* MAIN CONTENT */}
+          <main className="flex flex-col gap-5 p-5 max-md:p-3">
+            {/* LEFT */}
+            <div className="space-y-6 max-md:space-y-3">
+              {/* ABOUT */}
+              <About data={profileData} />
 
-      {/* PROFILE HEADER */}
-      <ProfileHeader bookRef={bookRef} data={profileData} page="User" />
+              {/* SERVICES */}
+              <ServicesOffered id={id} />
 
-      {/* MAIN CONTENT */}
-      <main className="flex flex-col gap-5 p-5 max-md:p-3">
-        {/* LEFT */}
-        <div className="space-y-6 max-md:space-y-3">
-          {/* ABOUT */}
-          <About data={profileData} />
+              {/* Reviews */}
+              <Reviews entrepreneurId={id} />
 
-          {/* SERVICES */}
-          <ServicesOffered id={id} />
+              {/* BOOKING */}
+              <section
+                ref={bookRef}
+                className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6 shadow-sm hover:shadow-md transition space-y-4"
+              >
+                {/* Header */}
+                <div>
+                  <h3 className="font-serif text-lg font-bold flex items-center gap-2">
+                    📅 Book Service
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Booking confirmed within 30 minutes
+                  </p>
+                </div>
 
-          {/* Reviews */}
-          <Reviews entrepreneurId={id} />
+                {/* Trust badge */}
+                <div className="text-xs bg-green-50 text-green-700 border border-green-200 rounded-lg px-3 py-2 flex items-start gap-2">
+                  <span>🛡️</span>
+                  <span>
+                    Book through our platform for <b>verified professionals</b>,
+                    secure payments, and reliable support.
+                  </span>
+                </div>
 
-          {/* BOOKING */}
-          <section
-            ref={bookRef}
-            className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6 shadow-sm hover:shadow-md transition space-y-4"
-          >
-            {/* Header */}
-            <div>
-              <h3 className="font-serif text-lg font-bold flex items-center gap-2">
-                📅 Book Service
-              </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                Booking confirmed within 30 minutes
-              </p>
+                {/* Warning */}
+                <p className="text-[11px] text-gray-400">
+                  ⚠️ For your safety, avoid booking outside the platform.
+                </p>
+
+                {/* CTA */}
+                <Button
+                  label="Confirm Booking →"
+                  onClick={() => {
+                    if (user) {
+                      setOpen(true);
+                    } else {
+                      negative("/auth");
+                    }
+                  }}
+                />
+              </section>
+
+              {/* Artisan Details */}
+              <section className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6 h-fit">
+                <h3 className="font-serif text-[var(--ink)] text-[13px] font-semibold mb-3">
+                  ℹ️ Artisan Details
+                </h3>
+
+                <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
+                  <div className="text-[13px]">📍Location</div>
+                  <div className="text-[13px] text-[var(--ink)]">
+                    {profileData?.user.city || "Not added"}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
+                  <div className="text-[13px]">📦 Orders Done</div>
+                  <div className="text-[13px] text-[var(--ink)]">
+                    {profileData?.completedOrders || 0}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
+                  <div className="text-[13px]">🗣️ Languages</div>
+                  <div className="text-[13px] text-[var(--ink)]">
+                    {profileData?.languages.toString() || "Languages not added"}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)] text-[13px]">
+                  <div>📱 Phone number</div>
+                  <div className="text-[var(--ink)] font-medium">
+                    {profileData?.user.phone || "Not provided"}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
+                  <div className="text-[13px]">💳 Payment</div>
+                  <div className="text-[13px] text-[var(--ink)]">
+                    {profileData?.payment.toString() || "Payment not added"}
+                  </div>
+                </div>
+              </section>
+
+              {/* HunarHub Guarantee */}
+              <section className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6 h-fit">
+                <h3 className="font-serif text-[var(--ink)] text-[13px] font-semibold mb-3">
+                  🛡️ HunarHub Guarantee
+                </h3>
+
+                <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
+                  <div className="text-[13px]">✅ ID-verified artisan</div>
+                </div>
+
+                <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
+                  <div className="text-[13px]">💬 Direct chat with artisan</div>
+                </div>
+
+                <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
+                  <div className="text-[13px]">📞 24/7 customer support</div>
+                </div>
+              </section>
             </div>
-
-            {/* Trust badge */}
-            <div className="text-xs bg-green-50 text-green-700 border border-green-200 rounded-lg px-3 py-2 flex items-start gap-2">
-              <span>🛡️</span>
-              <span>
-                Book through our platform for <b>verified professionals</b>,
-                secure payments, and reliable support.
-              </span>
-            </div>
-
-            {/* Warning */}
-            <p className="text-[11px] text-gray-400">
-              ⚠️ For your safety, avoid booking outside the platform.
-            </p>
-
-            {/* CTA */}
-            <Button
-              label="Confirm Booking →"
-              onClick={() => {
-                user ? setOpen(true) : negative("/auth");
-              }}
-            />
-          </section>
-
-          {/* Artisan Details */}
-          <section className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6 h-fit">
-            <h3 className="font-serif text-[var(--ink)] text-[13px] font-semibold mb-3">
-              ℹ️ Artisan Details
-            </h3>
-
-            <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
-              <div className="text-[13px]">📍Location</div>
-              <div className="text-[13px] text-[var(--ink)]">
-                {profileData?.city || "Not added"}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
-              <div className="text-[13px]">📦 Orders Done</div>
-              <div className="text-[13px] text-[var(--ink)]">
-                {profileData?.completedOrders || 0}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
-              <div className="text-[13px]">🗣️ Languages</div>
-              <div className="text-[13px] text-[var(--ink)]">
-                {profileData?.languages.toString() || "Languages not added"}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)] text-[13px]">
-              <div>📱 Phone number</div>
-              <div className="text-[var(--ink)] font-medium">
-                {profileData?.user.phone || "Not provided"}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
-              <div className="text-[13px]">💳 Payment</div>
-              <div className="text-[13px] text-[var(--ink)]">
-                {profileData?.payment.toString() || "Payment not added"}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between py-2">
-              <div className="text-[13px]">⏱ Response Time</div>
-              <div className="text-[13px] text-[var(--ink)]">~30 min</div>
-            </div>
-          </section>
-
-          {/* HunarHub Guarantee */}
-          <section className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6 h-fit">
-            <h3 className="font-serif text-[var(--ink)] text-[13px] font-semibold mb-3">
-              🛡️ HunarHub Guarantee
-            </h3>
-
-            <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
-              <div className="text-[13px]">✅ ID-verified artisan</div>
-            </div>
-
-            <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
-              <div className="text-[13px]">
-                🔄 Free alteration if not satisfied
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
-              <div className="text-[13px]">💬 Direct chat with artisan</div>
-            </div>
-
-            <div className="flex items-center justify-between border-b py-2 border-[rgba(196,99,42,0.12)]">
-              <div className="text-[13px]">📞 24/7 customer support</div>
-            </div>
-          </section>
-        </div>
-      </main>
+          </main>
+        </>
+      )}
 
       <SideSheet
         open={open}

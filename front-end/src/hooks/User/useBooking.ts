@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import type { bookingSchemaType } from "../../components/forms/BookingForm";
 import axiosApi from "../../lib/axios";
 import toast from "react-hot-toast";
-import { boolean } from "yup";
+import type { bookingSchemaType } from "../../types/user/types";
 
 /* ---------------- COMMON TYPES ---------------- */
 
@@ -50,7 +49,6 @@ export const useCreateBooking = () => {
     },
   );
 };
-
 
 export type Booking = {
   _id: string;
@@ -127,6 +125,8 @@ export const useUserBookings = (
     },
 
     placeholderData: (prev) => prev,
+    refetchOnReconnect: true,
+    refetchOnWindowFocus: false,
   });
 };
 

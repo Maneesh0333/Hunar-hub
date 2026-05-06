@@ -27,7 +27,7 @@ function ServicesOffered({ id }: PropsType) {
             className={`relative text-left p-4 rounded-xl bg-[var(--cream)] border border-[rgba(196,99,42,0.12)] transition-all duration-200 hover:-translate-y-0.5
                     hover:border-[var(--clay)] hover:bg-white`}
           >
-            <div className="text-2xl">👗</div>
+            {/* <div className="text-2xl">👗</div> */}
             <div className="font-semibold mt-3 text-sm">{s.title}</div>
             <div className="mt-1 text-xs text-[var(--earth-mid)]">
               {s.description}

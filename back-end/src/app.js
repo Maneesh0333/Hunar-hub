@@ -8,13 +8,13 @@ import categoryRoutes from "./routes/category.routes.js";
 import servicesRoutes from "./routes/service.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
 import complaintRoutes from "./routes/complaint.routes.js";
+import { globalLimiter } from "./middleware/global-limiter.middleware.js";
 
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 import { errorHandler } from "./middleware/error.middleware.js";
 import { notFound } from "./middleware/notFound.middleware.js";
-import bcrypt from "bcryptjs";
 
 const app = express();
 
@@ -28,6 +28,7 @@ app.use(
 );
 app.use(cookieParser());
 app.use(helmet());
+app.use(globalLimiter);
 
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);

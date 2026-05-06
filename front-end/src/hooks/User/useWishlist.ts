@@ -16,6 +16,7 @@ export type WishlistEntrepreneur = {
   minPrice: number;
   priceUnit: string;
   isAvailableToday: boolean;
+  verificationStatus: "Pending" | "Approved" | "Rejected";
 };
 
 type WishlistResponse = {
@@ -23,7 +24,6 @@ type WishlistResponse = {
   message: string;
   data: WishlistEntrepreneur[];
 };
-
 
 export const useWishlist = () => {
   const user = useAuthStore((state) => state.user);
@@ -38,8 +38,6 @@ export const useWishlist = () => {
   });
 };
 
-
-
 type ResponseType = {
   success: boolean;
   message: string;
@@ -53,7 +51,7 @@ export const useToggleWishlist = () => {
     AxiosError<ResponseType>,
     {
       entrepreneurId: string | undefined;
-      isWishlisted: boolean;
+      isWishlisted: boolean | undefined;
     }
   >({
     mutationFn: async ({ entrepreneurId, isWishlisted }) => {

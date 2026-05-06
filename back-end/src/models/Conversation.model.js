@@ -6,6 +6,7 @@ const conversationSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
     participants: {
       type: [
@@ -16,6 +17,10 @@ const conversationSchema = new mongoose.Schema(
         },
       ],
       validate: [(arr) => arr.length === 2, "Only 2 participants allowed"],
+    },
+    lastMessage: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true },

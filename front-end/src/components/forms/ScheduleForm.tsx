@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Controller, useForm } from "react-hook-form";
-import * as yup from "yup";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import InputField from "../Shared/InputField";
 import SelectInput from "../Shared/SelectInput";
 import Button from "../Shared/Button";
@@ -11,19 +10,9 @@ import {
   useUpdateSchedule,
   type Schedule,
 } from "../../hooks/Entrepreneur/useSchedule";
-import timeToMinutes from "../../utils/TimeToMinutes";
+import { createScheduleSchema, updateScheduleSchema } from "../../schema/entrepreneur/schedule.schema";
+import type { FormType } from "../../types/entrepreneur/types";
 
-const days = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
-const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
 
 // Days
 const dayOptions = [
@@ -35,106 +24,6 @@ const dayOptions = [
   { label: "Saturday", value: "Saturday" },
   { label: "Sunday", value: "Sunday" },
 ];
-
-export const createScheduleSchema = yup.object({
-  day: yup.string().trim().oneOf(days, "Invalid day").required(),
-
-  working: yup.boolean().required(),
-
-  start: yup
-    .string()
-    .trim()
-    .when("working", {
-      is: true,
-      then: (schema) =>
-        schema
-          .required("Start time is required")
-          .matches(timeRegex, "Invalid time format HH:mm"),
-      otherwise: (schema) => schema.notRequired(),
-    }),
-
-  end: yup
-    .string()
-    .trim()
-    .when("working", {
-      is: true,
-      then: (schema) =>
-        schema
-          .required("End time is required")
-          .matches(timeRegex, "Invalid time format HH:mm")
-          .test(
-            "is-after-start",
-            "End time must be after start time",
-            function (value) {
-              const { start } = this.parent;
-              if (!start || !value) return true;
-              return timeToMinutes(value) > timeToMinutes(start);
-            },
-          ),
-      otherwise: (schema) => schema.notRequired(),
-    }),
-});
-
-export const updateScheduleSchema = yup.object({
-  day: yup.string().trim().oneOf(days, "Invalid day"),
-
-  working: yup.boolean(),
-
-  start: yup
-    .string()
-    .trim()
-    .when("working", {
-      is: true,
-      then: (schema) =>
-        schema
-          .required("Start time is required")
-          .matches(timeRegex, "Invalid time format HH:mm"),
-      otherwise: (schema) =>
-        schema
-          .notRequired()
-          .test("valid-time", "Invalid time format HH:mm", (value) => {
-            if (!value) return true;
-            return timeRegex.test(value);
-          }),
-    }),
-
-  end: yup
-    .string()
-    .trim()
-    .when("working", {
-      is: true,
-      then: (schema) =>
-        schema
-          .required("End time is required")
-          .matches(timeRegex, "Invalid time format HH:mm")
-          .test(
-            "is-after-start",
-            "End time must be after start time",
-            function (value) {
-              const { start } = this.parent;
-              if (!start || !value) return true;
-              return timeToMinutes(value) > timeToMinutes(start);
-            },
-          ),
-      otherwise: (schema) =>
-        schema
-          .notRequired()
-          .test("valid-time", "Invalid time format HH:mm", (value) => {
-            if (!value) return true;
-            return timeRegex.test(value);
-          }),
-    }),
-});
-
-export type CreateScheduleSchemaType = yup.InferType<
-  typeof createScheduleSchema
->;
-
-export type UpdateScheduleSchemaType = yup.InferType<
-  typeof updateScheduleSchema
->;
-
-export type FormType = CreateScheduleSchemaType | UpdateScheduleSchemaType;
 
 type Props = {
   schedule?: Schedule | null;
@@ -150,7 +39,6 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
     handleSubmit,
     control,
     reset,
-    watch,
     formState: { errors, isValid, isDirty, dirtyFields },
   } = useForm({
     resolver: yupResolver(
@@ -164,7 +52,10 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
     },
   });
 
-  const working = watch("working");
+  const working = useWatch({
+    control,
+    name: "working",
+  });
 
   useEffect(() => {
     if (schedule) {
@@ -238,7 +129,6 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
           <input type="checkbox" {...register("working")} />
         </div>
 
-      
         {working && (
           <>
             <InputField
@@ -266,7 +156,11 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
         type="submit"
         label={schedule ? "Update Schedule" : "Add Schedule"}
         className="w-full"
-        disabled={!isValid || !isDirty || schedule ? updateMutation.isPending : createMutation.isPending}
+        disabled={
+          !isValid || !isDirty || schedule
+            ? updateMutation.isPending
+            : createMutation.isPending
+        }
         isLoading={
           schedule ? updateMutation.isPending : createMutation.isPending
         }

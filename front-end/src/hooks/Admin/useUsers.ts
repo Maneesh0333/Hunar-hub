@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosApi from "../../lib/axios";
+import type { AxiosError } from "axios";
+import toast from "react-hot-toast";
 
 export type UsersStats = {
   Active: number;
@@ -28,34 +30,36 @@ type UsersResponse = {
   users: User[];
 };
 
-export const useUsers = (status: string, search: string) => {
-  return useQuery<UsersResponse>({
-    queryKey: ["users", status, search],
+type ApiResponseType = {
+  success: boolean;
+  message: string;
+  data: UsersResponse;
+};
+
+export const useUsers = (
+  search: string = "",
+  status: string = "All",
+  page: number = 1,
+  limit: number = 5,
+) => {
+  return useQuery<UsersResponse, AxiosError<ResponseType>>({
+    queryKey: ["users", status, search, page, limit],
+
     queryFn: async () => {
-      const res = await axiosApi.get(
-        `/admin/users?status=${status}&search=${search}`,
-      );
+      const res = await axiosApi.get<ApiResponseType>("/admin/users", {
+        params: { status, search, page, limit },
+      });
 
-      const data = res.data?.data;
-
-      return {
-        page: data?.page ?? 1,
-        limit: data?.limit ?? 10,
-        total: data?.total ?? 0,
-        totalUsers: data?.totalUsers ?? 0,
-        totalPages: data?.totalPages ?? 1,
-        results: data?.results ?? 0,
-        stats: data?.stats ?? { Active: 0, Blocked: 0 },
-        users: data?.users ?? [],
-      };
+      return res.data.data;
     },
 
     placeholderData: (prev) => prev,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 };
 
-export type BlockUnblockResponseType = {
+type BlockUnblockResponseType = {
   success: boolean;
   message: string;
 };
@@ -63,11 +67,31 @@ export type BlockUnblockResponseType = {
 export const useBlockUsers = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<BlockUnblockResponseType, Error, string>({
-    mutationFn: (id: string) => axiosApi.patch(`/admin/users/${id}/block`),
+  return useMutation<BlockUnblockResponseType, AxiosError<BlockUnblockResponseType>, string>({
+    mutationFn: async (id: string) => {
+      const res = await axiosApi.patch<BlockUnblockResponseType>(
+        `/admin/users/${id}/block`,
+      );
+      return res.data;
+    },
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(data.message || "Block failed");
+        return;
+      }
 
-    onSuccess: () => {
+      toast.success(data.message || "User blocked successfully");
+
       queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+
+    onError: (error) => {
+      if (!error.response) {
+        toast.error("Network error, please try again later.");
+        return;
+      }
+
+      toast.error(error.response.data?.message || "Block failed");
     },
   });
 };
@@ -75,11 +99,31 @@ export const useBlockUsers = () => {
 export const useUnblockUsers = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<BlockUnblockResponseType, Error, string>({
-    mutationFn: (id: string) => axiosApi.patch(`/admin/users/${id}/unblock`),
+  return useMutation<BlockUnblockResponseType, AxiosError<BlockUnblockResponseType>, string>({
+    mutationFn: async (id: string) => {
+      const res = await axiosApi.patch<BlockUnblockResponseType>(
+        `/admin/users/${id}/unblock`,
+      );
+      return res.data;
+    },
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(data.message || "Unblock failed");
+        return;
+      }
 
-    onSuccess: () => {
+      toast.success(data.message || "User unblocked successfully");
+
       queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+
+    onError: (error) => {
+      if (!error.response) {
+        toast.error("Network error, please try again later.");
+        return;
+      }
+
+      toast.error(error.response.data?.message || "Unblock failed");
     },
   });
 };

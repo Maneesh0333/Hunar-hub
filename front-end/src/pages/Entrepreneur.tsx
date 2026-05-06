@@ -1,5 +1,9 @@
 import Sidebar from "../components/Entrepreneur/Sidebar";
 import { Outlet } from "react-router-dom";
+import { useSideBar } from "../stores/sideBarStore";
+import { Sidebar as SidebarIcon } from "lucide-react";
+import { useMediaQuery } from "react-responsive";
+import { useEffect } from "react";
 
 export type SidebarProfile = {
   name: string;
@@ -20,12 +24,6 @@ export type SidebarNavSection = {
   items: SidebarNavItem[];
 };
 
-const sidebarProfile: SidebarProfile = {
-  name: "Rashida Begum",
-  role: "Entrepreneur · Verified",
-  icon: "🧵",
-};
-
 const sidebarNav: SidebarNavSection[] = [
   {
     title: "Main",
@@ -41,7 +39,6 @@ const sidebarNav: SidebarNavSection[] = [
         icon: "📦",
         label: "Booking & Requests",
         path: "/entrepreneur/booking",
-        badge: "5",
       },
       {
         id: "services",
@@ -77,7 +74,6 @@ const sidebarNav: SidebarNavSection[] = [
         icon: "💬",
         label: "Messages",
         path: "/entrepreneur/messages",
-        badge: "2",
       },
       {
         id: "reviews",
@@ -113,17 +109,29 @@ const sidebarNav: SidebarNavSection[] = [
 ];
 
 export default function Entrepreneur() {
+  const setOpen = useSideBar((state) => state.setOpen);
+  const init = useSideBar((state) => state.init);
+
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+
+  useEffect(() => {
+    init(!isMobile);
+  }, [isMobile, init]);
+
   return (
     <div className="h-screen flex flex-col bg-[var(--cream)] font-sans text-[#2C1A0E]">
       {/* MAIN */}
-      <div className="flex overflow-hidden">
-        <Sidebar
-          sidebarProfile={sidebarProfile}
-          sidebarNav={sidebarNav}
-          role="Entrepreneur"
-        />
-
-        <Outlet />
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar sidebarNav={sidebarNav} />
+        <div className="flex-1 flex flex-col p-6 overflow-y-auto">
+          <button
+            onClick={() => setOpen()}
+            className="text-black p-2 w-fit z-10 bg-[var(--color-white)] text-[#6B4A2D] border border-[rgba(196,99,42,0.12)] cursor-pointer rounded-xl mb-2"
+          >
+            <SidebarIcon size={18} />
+          </button>
+          <Outlet />
+        </div>
       </div>
     </div>
   );

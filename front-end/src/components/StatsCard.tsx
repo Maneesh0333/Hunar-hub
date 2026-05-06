@@ -1,4 +1,4 @@
-import type { statsDataType } from "./Entrepreneur/EntrepreneursOverview";
+import type { statsDataType } from "../types/shared/types";
 
 export default function StatsCard({
   icon,

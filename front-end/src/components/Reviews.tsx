@@ -1,4 +1,5 @@
 import { useInfiniteReviews } from "../hooks/User/useReviews";
+import ErrorState from "../pages/ErrorState";
 import { useAuthStore } from "../stores/authStore";
 import RatingSummary from "./RatingSummary";
 import ReviewsContainer from "./ReviewsContainer";
@@ -26,8 +27,16 @@ export default function Reviews({
 }: ReviewsProps) {
   const user = useAuthStore((state) => state.user);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useInfiniteReviews(entrepreneurId ? entrepreneurId : user?.id);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useInfiniteReviews(entrepreneurId ? entrepreneurId : user?.id);
 
   // 🔹 Flatten all pages
   const allReviews = data?.pages.flatMap((page) => page.reviews) ?? [];
@@ -58,12 +67,22 @@ export default function Reviews({
 
   if (isLoading)
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <Spinner />
       </div>
     );
 
-  if (allReviews.length == 0)
+  if (isError) {
+    return (
+      <ErrorState
+        message="Failed to load reviews"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
+    );
+  }
+
+  if (allReviews.length === 0)
     return (
       <div className="flex h-full items-center justify-center">
         No reviews yet

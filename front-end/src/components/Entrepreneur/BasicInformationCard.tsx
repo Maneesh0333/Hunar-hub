@@ -44,7 +44,7 @@ function BasicInformationCard({ data }: { data: EntrepreneurProfile | undefined 
         <InputField
           label="Location / Workshop Address"
           readOnly={true}
-          value={data?.city.length === 0 ? "City not added" : data?.city}
+          value={data?.user?.city.length === 0 ? "City not added" : data?.user?.city}
           inputClassName="!px-3 !py-2 text-sm"
         />
 

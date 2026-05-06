@@ -3,6 +3,9 @@ import User from "../models/User.model.js";
 import { asyncHandler } from "../middleware/async.middleware.js";
 import Wishlist from "../models/Wishlist.model.js";
 import mongoose from "mongoose";
+import Entrepreneur from "../models/Entrepreneur.model.js";
+import Booking from "../models/Booking.model.js";
+import Category from "../models/Category.model.js";
 
 export const getProfile = asyncHandler(async (req, res) => {
   const { id } = req.user;
@@ -50,7 +53,6 @@ export const updateProfile = asyncHandler(async (req, res) => {
     throw err;
   }
 });
-
 
 export const addToWishlist = asyncHandler(async (req, res) => {
   const userId = req.user.id;
@@ -102,14 +104,14 @@ export const getWishlist = asyncHandler(async (req, res) => {
   const todayDay = today.toLocaleString("en-US", { weekday: "long" });
 
   const pipeline = [
-    // 🧾 Get wishlist of user
+    // Get wishlist of user
     {
       $match: {
         user: userId,
       },
     },
 
-    // 🔗 Join entrepreneur
+    // Join entrepreneur
     {
       $lookup: {
         from: "entrepreneurs",
@@ -120,7 +122,7 @@ export const getWishlist = asyncHandler(async (req, res) => {
     },
     { $unwind: "$entrepreneur" },
 
-    // 👤 Join user
+    // Join user
     {
       $lookup: {
         from: "users",
@@ -131,7 +133,7 @@ export const getWishlist = asyncHandler(async (req, res) => {
     },
     { $unwind: "$user" },
 
-    // 📂 Category
+    // Category
     {
       $lookup: {
         from: "categories",
@@ -142,7 +144,7 @@ export const getWishlist = asyncHandler(async (req, res) => {
     },
     { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
 
-    // 💰 Services
+    // Services
     {
       $lookup: {
         from: "services",
@@ -160,7 +162,7 @@ export const getWishlist = asyncHandler(async (req, res) => {
       },
     },
 
-    // 📅 Availability
+    // Availability
     {
       $lookup: {
         from: "entrepreneuravailabilities",
@@ -170,7 +172,7 @@ export const getWishlist = asyncHandler(async (req, res) => {
       },
     },
 
-    // 🗓 Schedule
+    // Schedule
     {
       $lookup: {
         from: "entrepreneurschedules",
@@ -180,7 +182,7 @@ export const getWishlist = asyncHandler(async (req, res) => {
       },
     },
 
-    // 🧠 Computed fields
+    // Computed fields
     {
       $addFields: {
         availability: { $arrayElemAt: ["$availability", 0] },
@@ -235,10 +237,10 @@ export const getWishlist = asyncHandler(async (req, res) => {
       },
     },
 
-    // 🎯 Final shape (same as search API)
+    // Final shape
     {
       $project: {
-        _id: "$user._id", 
+        _id: "$user._id",
         name: "$user.name",
         city: "$user.city",
         bio: "$entrepreneur.bio",
@@ -249,6 +251,7 @@ export const getWishlist = asyncHandler(async (req, res) => {
         minPrice: 1,
         priceUnit: 1,
         isAvailableToday: 1,
+        verificationStatus: "$entrepreneur.verificationStatus",
       },
     },
   ];
@@ -275,5 +278,23 @@ export const checkWishlist = asyncHandler(async (req, res) => {
     success: true,
     message: "Wishlist status retrieved successfully",
     data: { isWishlisted: !!exists },
+  });
+});
+
+export const getHomeStats = asyncHandler(async (req, res) => {
+  const [verified, completed, categories] = await Promise.all([
+    Entrepreneur.countDocuments({ verificationStatus: "Approved" }),
+    Booking.countDocuments({ status: "Completed" }),
+    Category.countDocuments(),
+  ]);
+
+  res.status(200).json({
+    success: true,
+    message: "Stats retrieved successfully",
+    data: {
+      VerifiedArtisans: verified,
+      OrdersCompleted: completed,
+      Categories: categories,
+    },
   });
 });

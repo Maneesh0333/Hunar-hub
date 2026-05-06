@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import axiosApi from "../../lib/axios";
 
 export type EntrepreneurCard = {
@@ -13,47 +13,51 @@ export type EntrepreneurCard = {
   minPrice: number;
   priceUnit: string;
   isAvailableToday: boolean;
+  verificationStatus: "Pending" | "Approved" | "Rejected";
 };
 
-export type SearchResponse = {
+export type SearchAPIResponse = {
   success: boolean;
-  message: string;
   data: {
     entrepreneurs: EntrepreneurCard[];
     totalFiltered: { count: number }[];
   };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+  };
 };
 
 export const useSearchEntrepreneurs = (
-  search: string,
-  category: string,
-  rating: string,
-  availableToday: boolean,
-  homeService: boolean,
-  page?: number,
-  limit?: number,
+  search: string = "",
+  category: string = "All",
+  rating: string = "Any",
+  availableToday: boolean = false,
+  homeService: boolean = false,
+  limit: number = 5,
 ) => {
-  return useQuery({
+  return useInfiniteQuery<SearchAPIResponse, Error>({
     queryKey: [
       "entrepreneurs-search",
       search,
       category,
-      page,
-      limit,
       rating,
       availableToday,
       homeService,
     ],
 
-    queryFn: async () => {
-      const { data } = await axiosApi.get<SearchResponse>(
+    queryFn: async ({ pageParam = 1 }) => {
+      const { data } = await axiosApi.get<SearchAPIResponse>(
         "/entrepreneurs/search/profile",
         {
           params: {
             search,
             category,
             rating,
-            page,
+            page: pageParam,
             limit,
             availableToday,
             homeService,
@@ -61,12 +65,15 @@ export const useSearchEntrepreneurs = (
         },
       );
 
-      return {
-        entrepreneurs: data.data.entrepreneurs,
-        total: data.data.totalFiltered?.[0]?.count ?? 0,
-      };
+      return data;
     },
 
-    placeholderData: (prev) => prev,
+    getNextPageParam: (lastPage) => {
+      return lastPage.pagination.hasNextPage
+        ? lastPage.pagination.page + 1
+        : undefined;
+    },
+
+    initialPageParam: 1,
   });
 };

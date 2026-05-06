@@ -58,10 +58,10 @@ export type ResponseType = {
 };
 
 export const useBookings = (
-  search = "",
-  status = "All",
-  page = 1,
-  limit = 5,
+  search: string = "",
+  status: string = "All",
+  page: number = 1,
+  limit: number = 5,
 ) => {
   return useQuery({
     queryKey: ["bookings", search, status, page, limit],

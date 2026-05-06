@@ -1,15 +1,17 @@
 import { Link, useNavigate } from "react-router-dom";
-import type { EntrepreneurProfile } from "../hooks/Entrepreneur/useProfile";
+
 import { useIsWishlisted, useToggleWishlist } from "../hooks/User/useWishlist";
 import { useAuthStore } from "../stores/authStore";
 import Stat from "./Stat";
-import { useRef } from "react";
+import type { EntrepreneurProfile } from "../hooks/User/useEntrepreneurPublicProfile";
+import { useCreateConversation } from "../hooks/User/useChat";
+import Spinner from "./Shared/Spinner";
 
 type ProfileHeaderProp = {
   page: "Entrepreneur" | "User";
   data: EntrepreneurProfile | undefined;
   onEdit?: () => void;
-  bookRef: React.RefObject<HTMLElement | null>;
+  bookRef?: React.RefObject<HTMLElement | null>;
 };
 
 function ProfileHeader({ page, data, onEdit, bookRef }: ProfileHeaderProp) {
@@ -18,18 +20,36 @@ function ProfileHeader({ page, data, onEdit, bookRef }: ProfileHeaderProp) {
 
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+  const createConversation = useCreateConversation();
 
+  const handleChatClick = () => {
+    if (user) {
+      createConversation.mutate({ receiverId: data?.user._id });
+      navigate(`/user/chat`, { state: { openList: false } });
+    } else {
+      navigate("/auth");
+    }
+  };
   return (
     <>
       {/* COVER */}
-      <div className="h-56 max-md:h-32 bg-gradient-to-r from-[#3B1A06] via-[#8B3E15] to-[#C4632A]" />
+      <div className="h-56 p-6 max-md:h-40 bg-gradient-to-r from-[#3B1A06] via-[#8B3E15] to-[#C4632A]">
+        {page === "User" && (
+          <Link
+            to="/search"
+            className="text-sm bg-transparent text-white hover:text-[var(--clay-light)] cursor-pointer"
+          >
+            ← Back to browse
+          </Link>
+        )}
+      </div>
 
       <section className="bg-white border-b px-6 pt-6 border-[rgba(196,99,42,0.12)]">
         <div className="flex flex-col md:flex-row gap-6 justify-between pb-6">
           <div className="flex-1">
             <div className="-mt-13 p-1 rounded-2xl bg-white w-fit ">
-              <div className="w-22 h-22 rounded-2xl bg-[#D4B896] flex items-center justify-center text-4xl shadow">
-                🧵
+              <div className="w-22 h-22 font-semibold rounded-2xl bg-[#D4B896] flex items-center justify-center text-4xl shadow">
+                {data?.user.name[0]}
               </div>
             </div>
             <h1 className="font-serif text-3xl font-black mt-3">
@@ -43,7 +63,7 @@ function ProfileHeader({ page, data, onEdit, bookRef }: ProfileHeaderProp) {
               <div className="flex items-center">
                 <div className="text-xl">📍</div>
                 <div className="text-xs text-[#5C3A1E]">
-                  {data?.city.length === 0 ? "city not added" : data?.city}
+                  {data?.user?.city || "city not added"}
                 </div>
               </div>
 
@@ -86,9 +106,9 @@ function ProfileHeader({ page, data, onEdit, bookRef }: ProfileHeaderProp) {
               onClick={
                 page === "User"
                   ? () => {
-                      if (!bookRef.current) return;
+                      if (!bookRef?.current) return;
 
-                      bookRef.current.scrollIntoView({
+                      bookRef?.current.scrollIntoView({
                         behavior: "smooth",
                         block: "center",
                       });
@@ -102,23 +122,25 @@ function ProfileHeader({ page, data, onEdit, bookRef }: ProfileHeaderProp) {
 
             {page === "User" && (
               <>
-                <Link
-                  state={{
-                    entrepreneurId: data?.user._id,
-                  }}
-                  to={!!user ? `/user/chat` : "/auth"}
+                <button
+                  onClick={() => handleChatClick()}
+                  disabled={createConversation.isPending}
                   className="px-5 py-3 h-fit bg-[var(--cream)] border border-[rgba(196,99,42,0.12)] hover:border-[var(--clay)] cursor-pointer text-white rounded-xl font-bold"
                 >
-                  💬
-                </Link>
+                  {!createConversation.isPending ? (
+                    "💬"
+                  ) : (
+                    <Spinner className="h-6! w-6!" />
+                  )}
+                </button>
 
                 <button
                   onClick={
-                    !!user
+                    user
                       ? () =>
                           toggleWishlist.mutate({
                             entrepreneurId: data?._id,
-                            isWishlisted: !!isWishlisted,
+                            isWishlisted: isWishlisted,
                           })
                       : () => navigate("/auth")
                   }

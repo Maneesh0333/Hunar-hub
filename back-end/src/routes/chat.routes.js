@@ -1,10 +1,10 @@
 import express from "express";
 import {
-  getOrCreateConversation,
   getUserConversations,
   getMessages,
   sendMessage,
   markAsRead,
+  createConversation,
 } from "../controllers/chat.controller.js";
 import { isAuthenticated, restrictTo } from "../middleware/auth.middleware.js";
 
@@ -14,7 +14,7 @@ router.use(isAuthenticated);
 router.use(restrictTo("User", "Entrepreneur"))
 
 // Conversation
-router.post("/conversation", getOrCreateConversation);
+router.post("/conversation", createConversation);
 router.get("/conversation", getUserConversations);
 
 // Messages

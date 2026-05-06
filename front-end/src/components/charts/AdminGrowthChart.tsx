@@ -8,12 +8,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import {
-  useAdminDashboard,
   type GrowthData,
 } from "../../hooks/Admin/useAdminDashboard";
 
 /* ---------------- MONTH MAP ---------------- */
-
 const MONTHS = [
   "Jan",
   "Feb",
@@ -29,9 +27,13 @@ const MONTHS = [
   "Dec",
 ];
 
-export default function AdminGrowthChart({ growth }: { growth: GrowthData[] }) {
+export default function AdminGrowthChart({
+  growth,
+}: {
+  growth: GrowthData[] | undefined;
+}) {
   const chartData = MONTHS.map((month, index) => {
-    const found = growth.find((g) => g._id === index + 1);
+    const found = growth?.find((g) => g._id === index + 1);
 
     return {
       name: month,

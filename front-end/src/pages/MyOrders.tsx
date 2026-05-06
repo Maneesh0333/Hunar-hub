@@ -7,6 +7,10 @@ import SideSheet from "../components/Shared/SideSheet";
 import ReviewForm from "../components/forms/ReviewForm";
 import ComplaintForm from "../components/forms/ComplaintForm";
 import Spinner from "../components/Shared/Spinner";
+import { Link } from "react-router-dom";
+import ErrorState from "./ErrorState";
+import NoInternet from "./NoInternet";
+import { useNetworkStatus } from "../hooks/Shared/useNetworkStatus";
 
 export default function MyOrders() {
   const [statusFilter, setStatusFilter] = useState("All");
@@ -14,8 +18,12 @@ export default function MyOrders() {
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [complaintBooking, setComplaintBooking] = useState<string | null>(null);
 
-  const { data, isLoading, isError } = useUserBookings("", statusFilter);
+  const { data, isLoading, isError, refetch, isFetching } = useUserBookings(
+    "",
+    statusFilter,
+  );
   const cancelMutation = useCancelBooking();
+  const isOnline = useNetworkStatus();
 
   const bookings = data?.bookings ?? [];
 
@@ -24,16 +32,29 @@ export default function MyOrders() {
     [data?.stats, data?.totalBookings],
   );
 
-  if (isError)
+  if (!isOnline) {
+    return <NoInternet />;
+  }
+
+  if (isError) {
     return (
-      <p className="flex-1 flex items-center justify-center text-red-500">
-        Error loading bookings
-      </p>
+      <ErrorState
+        message="Failed to load my orders"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
     );
+  }
 
   return (
     <div className="flex-1 flex flex-col p-6 text-[#2C1A0E] space-y-6">
-      {/* Header */}
+      <Link
+        to="/home"
+        className="text-sm bg-transparent text-[var(--clay-light)] hover:text-[var(--clay)] cursor-pointer"
+      >
+        ← Back to Home
+      </Link>
+
       <Header
         title="My Orders"
         description={`${data?.totalBookings || 0} total orders`}
@@ -53,8 +74,10 @@ export default function MyOrders() {
 
           {/* Orders List */}
           <div className="space-y-4 flex flex-col flex-1">
-            {bookings.length === 0 && (
-              <p className="flex-1 flex items-center justify-center text-sm text-[#6B4A2D]">No bookings found</p>
+            {bookings && bookings.length === 0 && (
+              <p className="flex-1 flex items-center justify-center text-sm text-[#6B4A2D]">
+                No bookings found
+              </p>
             )}
 
             {bookings.map((item) => {

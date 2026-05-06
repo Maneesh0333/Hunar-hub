@@ -20,4 +20,5 @@ export const bookingSchema = yup
       )
       .default("visit_workshop"),
   })
-  .stripUnknown(true);
+  .noUnknown(true, "Unknown fields are not allowed");
+

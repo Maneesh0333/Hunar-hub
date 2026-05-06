@@ -52,61 +52,61 @@ reviewSchema.index(
   { unique: true }
 );
 
-/* ⭐ Calculate Service Rating */
-reviewSchema.statics.calcServiceRatings = async function (serviceId) {
-  const stats = await this.aggregate([
-    { $match: { service: serviceId } },
-    {
-      $group: {
-        _id: "$service",
-        avg: { $avg: "$rating" },
-        total: { $sum: 1 },
-      },
-    },
-  ]);
+// /* ⭐ Calculate Service Rating */
+// reviewSchema.statics.calcServiceRatings = async function (serviceId) {
+//   const stats = await this.aggregate([
+//     { $match: { service: serviceId } },
+//     {
+//       $group: {
+//         _id: "$service",
+//         avg: { $avg: "$rating" },
+//         total: { $sum: 1 },
+//       },
+//     },
+//   ]);
 
-  await mongoose.model("Service").findByIdAndUpdate(serviceId, {
-    ratingsAverage: stats[0]?.avg || 0,
-    ratingsQuantity: stats[0]?.total || 0,
-  });
-};
+//   await mongoose.model("Service").findByIdAndUpdate(serviceId, {
+//     ratingsAverage: stats[0]?.avg || 0,
+//     ratingsQuantity: stats[0]?.total || 0,
+//   });
+// };
 
-/* ⭐ Calculate Entrepreneur Rating */
-reviewSchema.statics.calcEntrepreneurRatings = async function (
-  entrepreneurId
-) {
-  const stats = await this.aggregate([
-    { $match: { entrepreneur: entrepreneurId } },
-    {
-      $group: {
-        _id: "$entrepreneur",
-        avg: { $avg: "$rating" },
-        total: { $sum: 1 },
-      },
-    },
-  ]);
+// /* ⭐ Calculate Entrepreneur Rating */
+// reviewSchema.statics.calcEntrepreneurRatings = async function (
+//   entrepreneurId
+// ) {
+//   const stats = await this.aggregate([
+//     { $match: { entrepreneur: entrepreneurId } },
+//     {
+//       $group: {
+//         _id: "$entrepreneur",
+//         avg: { $avg: "$rating" },
+//         total: { $sum: 1 },
+//       },
+//     },
+//   ]);
 
-  await mongoose.model("Entrepreneur").findByIdAndUpdate(
-    entrepreneurId,
-    {
-      "rating.average": stats[0]?.avg || 0,
-      "rating.totalReviews": stats[0]?.total || 0,
-    }
-  );
-};
+//   await mongoose.model("Entrepreneur").findByIdAndUpdate(
+//     entrepreneurId,
+//     {
+//       "rating.average": stats[0]?.avg || 0,
+//       "rating.totalReviews": stats[0]?.total || 0,
+//     }
+//   );
+// };
 
-/* 🔥 Middleware */
-reviewSchema.post("save", function () {
-  this.constructor.calcServiceRatings(this.service);
-  this.constructor.calcEntrepreneurRatings(this.entrepreneur);
-});
+// /* 🔥 Middleware */
+// reviewSchema.post("save", function () {
+//   this.constructor.calcServiceRatings(this.service);
+//   this.constructor.calcEntrepreneurRatings(this.entrepreneur);
+// });
 
-reviewSchema.post("findOneAndDelete", async function (doc) {
-  if (doc) {
-    await doc.constructor.calcServiceRatings(doc.service);
-    await doc.constructor.calcEntrepreneurRatings(doc.entrepreneur);
-  }
-});
+// reviewSchema.post("findOneAndDelete", async function (doc) {
+//   if (doc) {
+//     await doc.constructor.calcServiceRatings(doc.service);
+//     await doc.constructor.calcEntrepreneurRatings(doc.entrepreneur);
+//   }
+// });
 
 const Review = mongoose.model("Review", reviewSchema);
 export default Review;

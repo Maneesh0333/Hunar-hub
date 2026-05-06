@@ -2,20 +2,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 import InputField from "../Shared/InputField";
 import Button from "../Shared/Button";
-import { useCreateComplaint } from "../../hooks/Shared/useComplaints"; // Assuming you have this hook
-import * as yup from "yup";
+import { useCreateComplaint } from "../../hooks/Shared/useComplaints";
 import SelectInput from "../Shared/SelectInput";
+import type { ComplaintFormType } from "../../types/user/types";
+import { complaintSchema } from "../../schema/user/complaint.schema";
 
-export const complaintSchema = yup.object({
-  type: yup.string().required("Please select an issue category"),
-  description: yup
-    .string()
-    .required("Description is required")
-    .min(10, "Please provide at least 10 characters")
-    .max(500, "Maximum 500 characters"),
-});
-
-export type ComplaintFormType = yup.InferType<typeof complaintSchema>;
 
 type Props = {
   booking: string;

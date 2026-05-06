@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosApi from "../../lib/axios";
 import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
+import type { ProfileFormValues } from "../../types/entrepreneur/types";
 
 export type EntrepreneurProfile = {
   _id: string;
@@ -16,11 +17,11 @@ export type EntrepreneurProfile = {
     name: string;
     email: string;
     phone: string;
+    city: string;
   };
 
   bio: string;
   about: string;
-  city: string;
   visitType: string[];
   skills: string[];
   payment: string[];
@@ -56,10 +57,21 @@ type ResponseType = {
   message: string;
 };
 
+export type UpdateProfilePayload = Partial<
+  Omit<ProfileFormValues, "skills" | "languages">
+> & {
+  skills?: string[];
+  languages?: string[];
+};
+
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<ResponseType, AxiosError<ResponseType>, any>({
+  return useMutation<
+    ResponseType,
+    AxiosError<ResponseType>,
+    UpdateProfilePayload
+  >({
     mutationFn: async (data) => {
       const res = await axiosApi.patch<ResponseType>(
         "/entrepreneurs/profile",

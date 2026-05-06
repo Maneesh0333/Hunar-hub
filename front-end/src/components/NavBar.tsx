@@ -1,19 +1,29 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
+import { useLogout } from "../hooks/Auth/useLogout";
 
 export default function NavBar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const user = useAuthStore(state=>state.accessToken);
+  const user = useAuthStore((state) => state.user);
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const logoutMutation = useLogout();
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (!dropdownRef) return;
-      
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setProfileOpen(false);
       }
     }
@@ -28,11 +38,14 @@ export default function NavBar() {
                  backdrop-blur-[12px]
                  border-b border-[rgba(196,99,42,0.12)]"
     >
-      <div className="flex items-center justify-between px-6 md:px-16 py-4">
+      <div className="flex items-center justify-between px-10 max-md:px-6 py-4">
         {/* Logo */}
-        <h1 className="font-playfair font-black text-2xl tracking-tight text-[var(--clay)]">
+        <Link
+          to={"/home"}
+          className="font-playfair font-black text-2xl tracking-tight text-[var(--clay)]"
+        >
           Hunar<span className="text-[var(--ink)]">Hub</span>
-        </h1>
+        </Link>
 
         {/* Desktop */}
         {user ? (
@@ -44,45 +57,71 @@ export default function NavBar() {
               🔔
             </button>
 
-            <Link to={'/user/chat'} className="w-9 h-9 flex items-center justify-center  border border-[rgba(196,99,42,0.12)] rounded-lg  bg-[var(--white)] hover:border-[var(--clay)] cursor-pointer">
+            <Link
+              to={"/user/chat"}
+              state={{ openList: true }}
+              className="w-9 h-9 flex items-center justify-center  border border-[rgba(196,99,42,0.12)] rounded-lg  bg-[var(--white)] hover:border-[var(--clay)] cursor-pointer"
+            >
               💬
             </Link>
 
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="w-9 h-9 bg-[var(--clay-dark)] rounded-lg cursor-pointer"
+                className="w-9 h-9 bg-[var(--clay-dark)] text-white font-bold rounded-lg cursor-pointer"
               >
-                👩
+                {user.name[0]}
               </button>
 
               {profileOpen && (
                 <div className="flex flex-col gap-1 absolute top-10 right-0 rounded-2xl border border-[rgba(196,99,42,0.12)] bg-white text-[var(--earth)] p-3">
-                  <Link to={"/user/profile"} className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
+                  <Link
+                    to={"/user/profile"}
+                    onClick={() => setProfileOpen(false)}
+                    className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer"
+                  >
                     👤 My Profile
                   </Link>
-                  <Link to={"/user/orders"} className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
+                  <Link
+                    to={"/user/orders"}
+                    onClick={() => setProfileOpen(false)}
+                    className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer"
+                  >
                     📦 My Orders
                   </Link>
-                  <Link to={"/user/wishlist"} className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
+                  <Link
+                    to={"/user/wishlist"}
+                    onClick={() => setProfileOpen(false)}
+                    className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer"
+                  >
                     ❤️ Wishlist
                   </Link>
                   <span className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
-                    🏆 Loyalty Points
-                  </span>
-                  <span className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
                     ⚙️ Settings
                   </span>
-                  <span className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
-                    🚪 Sign Out
-                  </span>
+                  <button
+                    onClick={handleLogout}
+                    disabled={logoutMutation.isPending}
+                    className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer text-left"
+                  >
+                    <span className="text-lg">🚪</span>
+                    {logoutMutation.isPending ? (
+                      <>
+                        <span className="flex items-center justify-center w-10">
+                          <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                        </span>
+                      </>
+                    ) : (
+                      "Logout"
+                    )}
+                  </button>
                 </div>
               )}
             </div>
           </div>
         ) : (
           <div className="hidden md:flex items-center gap-3">
-            <Link 
+            <Link
               to={"/auth"}
               className="px-5 py-2 border border-[var(--clay)]
                        rounded-md text-sm font-medium
@@ -92,25 +131,39 @@ export default function NavBar() {
               Log in
             </Link>
 
-            <button
+            <Link
+              to={"/auth"}
+              state={{ page: "signup" }}
               className="px-5 py-2 rounded-md text-sm font-semibold
                        text-white bg-[var(--clay)]
                        shadow-[0_4px_14px_rgba(196,99,42,0.35)]
                        transition hover:bg-[var(--clay-dark)] cursor-pointer"
             >
               Join Free
-            </button>
+            </Link>
           </div>
         )}
 
         {/* Mobile Toggle */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden text-2xl text-[var(--clay)]"
-          aria-label="Toggle menu"
-        >
-          ☰
-        </button>
+        <div className="md:hidden flex gap-5 items-center justify-center">
+          {user && (
+            <Link
+              to={"/user/chat"}
+              state={{ openList: true }}
+              className="w-9 h-9 flex items-center justify-center  border border-[rgba(196,99,42,0.12)] rounded-lg  bg-[var(--white)] hover:border-[var(--clay)] cursor-pointer"
+            >
+              💬
+            </Link>
+          )}
+
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="text-2xl cursor-pointer text-[var(--clay)]"
+            aria-label="Toggle menu"
+          >
+            ☰
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
@@ -121,34 +174,60 @@ export default function NavBar() {
         >
           {user ? (
             <div className="flex flex-col gap-3 text-[var(--earth)]">
-              <span className="hover:text-[var(--clay)] cursor-pointer">
+              <Link
+                to={"/user/profile"}
+                className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer text-left"
+              >
                 👤 My Profile
-              </span>
-              <span className="hover:text-[var(--clay)] cursor-pointer">
+              </Link>
+              <Link
+                to={"/user/orders"}
+                className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer text-left"
+              >
                 📦 My Orders
-              </span>
-              <span className="hover:text-[var(--clay)] cursor-pointer">
+              </Link>
+              <Link
+                to={"/user/wishlist"}
+                className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer text-left"
+              >
                 ❤️ Wishlist
-              </span>
-              <span className="hover:text-[var(--clay)] cursor-pointer">
-                🏆 Loyalty Points
-              </span>
-              <span className="hover:text-[var(--clay)] cursor-pointer">
+              </Link>
+              <span className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer text-left">
                 ⚙️ Settings
               </span>
-              <span className="hover:text-[var(--clay)] cursor-pointer">
-                🚪 Sign Out
-              </span>
+              <button
+                onClick={handleLogout}
+                disabled={logoutMutation.isPending}
+                className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer text-left"
+              >
+                <span className="text-lg">🚪</span>
+                {logoutMutation.isPending ? (
+                  <>
+                    <span className="flex items-center justify-center w-10">
+                      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                    </span>
+                  </>
+                ) : (
+                  "Logout"
+                )}
+              </button>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              <button className="w-full px-4 py-2 border border-[var(--clay)] rounded-md text-sm font-medium text-[var(--clay)] hover:bg-[var(--clay)] hover:text-white">
+              <Link
+                to={"/auth"}
+                className="w-full px-4 py-2 border border-[var(--clay)] rounded-md text-sm font-medium text-[var(--clay)] hover:bg-[var(--clay)] hover:text-white"
+              >
                 Log in
-              </button>
+              </Link>
 
-              <button className="w-full px-4 py-2 rounded-md text-sm font-semibold text-white bg-[var(--clay)] shadow-[0_4px_14px_rgba(196,99,42,0.35)] hover:bg-[var(--clay-dark)]">
+              <Link
+                to={"/auth"}
+                state={{ page: "signup" }}
+                className="w-full px-4 py-2 rounded-md text-sm font-semibold text-white bg-[var(--clay)] shadow-[0_4px_14px_rgba(196,99,42,0.35)] hover:bg-[var(--clay-dark)]"
+              >
                 Join Free
-              </button>
+              </Link>
             </div>
           )}
         </div>

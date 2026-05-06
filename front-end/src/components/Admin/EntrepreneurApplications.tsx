@@ -12,33 +12,49 @@ import SearchInput from "../Shared/SearchInput";
 import Table from "../Shared/Table";
 import EntrepreneurApplicationRow from "./EntrepreneurApplicationRow";
 import Spinner from "../Shared/Spinner";
+import ErrorState from "../../pages/ErrorState";
+import NoInternet from "../../pages/NoInternet";
+import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
+import Pagination from "../Shared/Pagination";
 
 export default function EntrepreneurApplications() {
   const [activeFilter, setActiveFilter] = useState("Pending");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const isOnline = useNetworkStatus();
 
-  const { data, isLoading, isError, isFetching } = useEntrepreneurs(
+  const { data, isLoading, isError, isFetching, refetch } = useEntrepreneurs(
     activeFilter,
     search,
+    page,
     "applications",
   );
 
   const approveMutation = useApproveEntrepreneur();
   const rejectMutation = useRejectEntrepreneur();
 
-  if (isError) return <p className="flex-1 flex items-center justify-center">Error loading entrepreneurs</p>;
-
   const entrepreneurs = data?.entrepreneurs ?? [];
-
   const chips = getChips(data?.stats, data?.totalEntrepreneurs);
 
+  if (!isOnline) {
+    return <NoInternet />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        message="Failed to load entrepreneur applications"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
+    );
+  }
   return (
-    <div className="flex-1 flex flex-col p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
+    <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
       <Header
         title="Entrepreneur Applications"
-        description={`${data?.totalEntrepreneurs} total applications`}
+        description={`${data?.totalEntrepreneurs || 0} total applications`}
       />
-
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <Spinner />
@@ -49,12 +65,18 @@ export default function EntrepreneurApplications() {
             <FilterChips
               chips={chips}
               active={activeFilter}
-              onChange={setActiveFilter}
+              onChange={(value) => {
+                setActiveFilter(value);
+                setPage(1);
+              }}
             />
 
             <SearchInput
               value={search}
-              onChange={setSearch}
+              onChange={(value) => {
+                setSearch(value);
+                setPage(1);
+              }}
               placeholder="Search entrepreneur..."
               className="w-70 max-lg:w-full"
             />
@@ -73,6 +95,11 @@ export default function EntrepreneurApplications() {
                 rejectMutation={rejectMutation}
               />
             )}
+          />
+          <Pagination
+            page={data?.page ?? 1}
+            totalPages={data?.totalPages ?? 1}
+            onPageChange={setPage}
           />
         </>
       )}

@@ -3,25 +3,27 @@ const steps = [
     num: "01",
     icon: "🔍",
     title: "Browse & Discover",
-    desc: "Search local artisans by skill, location, or rating. Read reviews, check availability, and compare prices before booking."
+    desc: "Search local artisans by skill, location, or rating. Read reviews, check availability, and compare prices before booking.",
   },
   {
     num: "02",
     icon: "📋",
     title: "Book or Order",
-    desc: "Place a service request or product order directly. Describe your requirements and choose a time slot that works for you."
+    desc: "Place a service request or product order directly. Describe your requirements and choose a time slot that works for you.",
   },
   {
     num: "03",
     icon: "✅",
     title: "Get It Done",
-    desc: "The artisan accepts your request and delivers. Pay securely and leave a review to help the community grow."
-  }
+    desc: "The artisan accepts your request and delivers. Pay securely and leave a review to help the community grow.",
+  },
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="relative overflow-hidden bg-[var(--earth)] px-6 md:px-16 py-24">
+    <section
+      className="relative bg-[var(--earth)]  px-16 max-md:px-6 py-10"
+    >
       {/* Header */}
       <p className="text-xs tracking-[0.3em] font-semibold uppercase text-[var(--clay-light)] mb-3">
         Simple Process
@@ -53,9 +55,7 @@ export default function HowItWorks() {
               {step.title}
             </h3>
 
-            <p className="text-sm leading-relaxed text-white/55">
-              {step.desc}
-            </p>
+            <p className="text-sm leading-relaxed text-white/55">{step.desc}</p>
           </div>
         ))}
       </div>

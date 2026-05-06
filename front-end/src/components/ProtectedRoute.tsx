@@ -1,18 +1,29 @@
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
+import Spinner from "./Shared/Spinner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: "Admin" | "User" | "Entrepreneur";
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  requiredRole,
+}) => {
   const user = useAuthStore((state) => state.user);
-  const accessToken = useAuthStore((state) => state.accessToken);
+  const loading = useAuthStore((state) => state.loading);
 
-  if (!accessToken) return <Navigate to="/auth" replace />;
+  if (loading || user === undefined) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
-  // check role
+  if (!user) return <Navigate to="/auth" replace />;
+
   if (requiredRole && user?.role !== requiredRole) {
     return <Navigate to="/" replace />;
   }

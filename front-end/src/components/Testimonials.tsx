@@ -24,7 +24,10 @@ export default function Testimonials() {
   ];
 
   return (
-    <section className="px-6 md:px-16 py-24 bg-[var(--warm-white)]">
+    <section
+      className="px-16 max-md:px-6
+        py-10 bg-[var(--warm-white)]"
+    >
       {/* Header */}
       <p className="text-xs tracking-[0.3em] font-semibold uppercase text-[var(--clay)] mb-3">
         Real Stories
@@ -43,8 +46,10 @@ export default function Testimonials() {
                        border border-[var(--clay)]/10"
           >
             {/* Quote mark */}
-            <div className="absolute top-3 left-5 font-playfair text-6xl leading-none
-                            text-[var(--clay)] opacity-20">
+            <div
+              className="absolute top-3 left-5 font-playfair text-6xl leading-none
+                            text-[var(--clay)] opacity-20"
+            >
               "
             </div>
 
@@ -68,9 +73,7 @@ export default function Testimonials() {
                 <div className="text-sm font-semibold text-[var(--ink)]">
                   {t.name}
                 </div>
-                <div className="text-xs text-[var(--clay)]">
-                  {t.role}
-                </div>
+                <div className="text-xs text-[var(--clay)]">{t.role}</div>
               </div>
             </div>
           </div>

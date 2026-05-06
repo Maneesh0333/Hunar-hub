@@ -29,8 +29,13 @@ export const createCategory = asyncHandler(async (req, res) => {
 
 /* -------------------- GET ALL -------------------- */
 export const getAllCategories = asyncHandler(async (req, res) => {
+  const { limit = 10 } = req.query;
+
+  const limitNum = Math.min(Math.max(parseInt(limit), 1), 50);
+
   const categories = await Category.find({ status: "Active" })
     .sort({ createdAt: -1 })
+    .limit(limitNum)
     .select("categoryId name icon")
     .lean();
 

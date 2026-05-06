@@ -20,17 +20,18 @@ export default function ArtisanCard({ artisan }: ArtisanCardProps) {
         {/* Cover */}
         <div className="relative h-[88px] flex items-start p-2.5 bg-gradient-to-br from-[#C4632A] to-[#E8895A]">
           <span className="text-[11px] font-semibold text-white px-2.5 py-0.5 rounded-full bg-white/25 backdrop-blur">
-            ⭐ Top Pick
+            {artisan.verificationStatus === "Approved"
+              ? "✅ Verified"
+              : "❌ Not Verified"}
           </span>
-
         </div>
 
         {/* Avatar */}
         <div
-          className="relative z-10 -mt-7 ml-4 w-14 h-14 rounded-full border-4 border-white bg-[#D4B896]
-                      flex items-center justify-center text-xl shadow-md"
+          className="relative -mt-7 ml-4 w-14 h-14 rounded-full border-4 border-white bg-[#D4B896]
+                      flex items-center font-bold justify-center text-xl shadow-md"
         >
-          🏺
+          {artisan.name[0]}
         </div>
       </div>
 

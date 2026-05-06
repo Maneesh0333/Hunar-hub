@@ -209,7 +209,6 @@ export const getUserBookings = asyncHandler(async (req, res) => {
   });
 
   /* ---------------- EXECUTE ---------------- */
-
   const result = await Booking.aggregate(pipeline);
 
   const bookings = result[0]?.bookings || [];
@@ -417,17 +416,184 @@ export const getEntrepreneurBookings = asyncHandler(async (req, res) => {
   });
 });
 
-export const getAllBookings = asyncHandler(async (req, res) => {
-  const bookings = await Booking.find()
-    .populate("customerId", "name email")
-    .populate("entrepreneurId")
-    .populate("serviceId")
-    .sort({ createdAt: -1 });
+export const getAllBookingsAdmin = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, search = "", status = "All" } = req.query;
+
+  const pageNum = Math.max(parseInt(page), 1);
+  const limitNum = Math.min(Math.max(parseInt(limit), 1), 50);
+  const skip = (pageNum - 1) * limitNum;
+
+  /* ---------------- FILTER OBJECT ---------------- */
+
+  const filterMatch = {};
+
+  // 🔍 Search
+  if (search) {
+    filterMatch.$or = [
+      { bookingId: { $regex: search, $options: "i" } },
+      { "service.title": { $regex: search, $options: "i" } },
+      { "customer.name": { $regex: search, $options: "i" } },
+      { "entrepreneur.user.name": { $regex: search, $options: "i" } },
+    ];
+  }
+
+  // 🚦 Status filter
+  if (status !== "All") {
+    filterMatch.status = status;
+  }
+
+  /* ---------------- PIPELINE ---------------- */
+
+  const pipeline = [
+    /* 🔗 SERVICE */
+    {
+      $lookup: {
+        from: "services",
+        localField: "service",
+        foreignField: "_id",
+        as: "service",
+      },
+    },
+    { $unwind: { path: "$service", preserveNullAndEmptyArrays: true } },
+
+    /* 🔗 ENTREPRENEUR */
+    {
+      $lookup: {
+        from: "entrepreneurs",
+        localField: "entrepreneur",
+        foreignField: "_id",
+        as: "entrepreneur",
+      },
+    },
+    { $unwind: { path: "$entrepreneur", preserveNullAndEmptyArrays: true } },
+
+    /* 🔗 ENTREPRENEUR USER */
+    {
+      $lookup: {
+        from: "users",
+        localField: "entrepreneur.user",
+        foreignField: "_id",
+        as: "entrepreneurUser",
+      },
+    },
+    {
+      $unwind: {
+        path: "$entrepreneurUser",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    /* 🔗 CUSTOMER */
+    {
+      $lookup: {
+        from: "users",
+        localField: "customer",
+        foreignField: "_id",
+        as: "customer",
+      },
+    },
+    {
+      $unwind: {
+        path: "$customer",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    /* 🧠 MERGE USER INTO ENTREPRENEUR */
+    {
+      $addFields: {
+        "entrepreneur.user": "$entrepreneurUser",
+      },
+    },
+
+    /* ---------------- FACET ---------------- */
+
+    {
+      $facet: {
+        /* 📦 BOOKINGS (FILTERED) */
+        bookings: [
+          { $match: filterMatch },
+          { $sort: { createdAt: -1 } },
+          { $skip: skip },
+          { $limit: limitNum },
+
+          {
+            $project: {
+              _id: 1,
+              bookingId: 1,
+              totalAmount: 1,
+              visitType: 1,
+              status: 1,
+              paymentStatus: 1,
+              createdAt: 1,
+
+              "service.title": 1,
+
+              "customer.name": 1,
+              "customer.phone": 1,
+
+              "entrepreneur.user.name": 1,
+            },
+          },
+        ],
+
+        /* 🔢 TOTAL FILTERED */
+        totalFiltered: [{ $match: filterMatch }, { $count: "count" }],
+
+        /* 🔢 TOTAL ALL */
+        total: [{ $count: "count" }],
+
+        /* 📊 GLOBAL STATS (UNFILTERED) */
+        stats: [
+          {
+            $group: {
+              _id: "$status",
+              count: { $sum: 1 },
+            },
+          },
+        ],
+      },
+    },
+  ];
+
+  /* ---------------- EXECUTE ---------------- */
+
+  const result = await Booking.aggregate(pipeline);
+
+  const bookings = result[0]?.bookings || [];
+  const total = result[0]?.total[0]?.count || 0;
+  const totalFiltered = result[0]?.totalFiltered[0]?.count || 0;
+  const statsArray = result[0]?.stats || [];
+
+  /* ---------------- FORMAT STATS ---------------- */
+
+  const stats = {
+    Pending: 0,
+    Confirmed: 0,
+    Declined: 0,
+    Completed: 0,
+    Cancelled: 0,
+  };
+
+  statsArray.forEach((s) => {
+    stats[s._id] = s.count;
+  });
+
+  /* ---------------- RESPONSE ---------------- */
 
   res.status(200).json({
     success: true,
-    results: bookings.length,
-    data: bookings,
+    message: "Admin bookings fetched successfully",
+    data: {
+      bookings,
+      stats,
+      total, // all bookings
+      totalFiltered, // filtered count
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(totalFiltered / limitNum),
+      results: bookings.length,
+    },
   });
 });
 
@@ -449,7 +615,9 @@ export const updatePaymentStatus = asyncHandler(async (req, res) => {
   /* ---------------- Find Entrepreneur ---------------- */
   const entrepreneur = await Entrepreneur.findOne({
     user: req.user.id,
-  });
+  })
+    .select("_id")
+    .lean();
 
   if (!entrepreneur) {
     throw new AppError("Entrepreneur not found", 404);
@@ -459,7 +627,7 @@ export const updatePaymentStatus = asyncHandler(async (req, res) => {
   const booking = await Booking.findOne({
     _id: id,
     entrepreneur: entrepreneur._id,
-  });
+  }).select("_id paymentStatus");
 
   if (!booking) {
     throw new AppError("Booking not found", 404);
@@ -477,7 +645,6 @@ export const updatePaymentStatus = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Booking payment status updated successfully",
-    data: booking,
   });
 });
 
@@ -486,7 +653,6 @@ export const updateBookingStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
 
   /* ---------------- Allowed Status ---------------- */
-
   const allowedStatuses = ["Confirmed", "Declined", "Completed"];
 
   if (!allowedStatuses.includes(status)) {
@@ -494,31 +660,30 @@ export const updateBookingStatus = asyncHandler(async (req, res) => {
   }
 
   /* ---------------- Find Entrepreneur ---------------- */
-
   const entrepreneur = await Entrepreneur.findOne({
     user: req.user.id,
-  });
+  })
+    .select("_id")
+    .lean();
 
   if (!entrepreneur) {
     throw new AppError("Entrepreneur not found", 404);
   }
 
   /* ---------------- Find Booking ---------------- */
-
   const booking = await Booking.findOne({
     _id: id,
     entrepreneur: entrepreneur._id,
-  });
+  }).select("_id status");
 
   if (!booking) {
     throw new AppError("Booking not found", 404);
   }
 
   /* ---------------- Status Transition Rules ---------------- */
-
   const currentStatus = booking.status;
 
-  // 🔒 Prevent invalid transitions
+  // Prevent invalid transitions
   if (currentStatus === "Completed" || currentStatus === "Cancelled") {
     throw new AppError("Cannot update completed/cancelled booking", 400);
   }
@@ -537,14 +702,11 @@ export const updateBookingStatus = asyncHandler(async (req, res) => {
 
   /* ---------------- Update ---------------- */
 
-  booking.status = status;
-
-  // 📊 Update stats (optional but 🔥)
+  // Update stats
   if (status === "Completed") {
     await Entrepreneur.findByIdAndUpdate(entrepreneur._id, {
       $inc: {
         completedOrders: 1,
-        totalOrders: 1,
       },
     });
   }
@@ -555,14 +717,12 @@ export const updateBookingStatus = asyncHandler(async (req, res) => {
     });
   }
 
+  booking.status = status;
   await booking.save();
-
-  /* ---------------- Response ---------------- */
 
   res.status(200).json({
     success: true,
     message: `Booking ${status} successfully`,
-    data: booking,
   });
 });
 
@@ -583,7 +743,7 @@ export const updateUserBookingStatus = asyncHandler(async (req, res) => {
   const booking = await Booking.findOne({
     _id: id,
     customer: req.user.id,
-  });
+  }).select("_id status");
 
   if (!booking) {
     throw new AppError("Booking not found", 404);
@@ -601,7 +761,6 @@ export const updateUserBookingStatus = asyncHandler(async (req, res) => {
   /* ---------------- Update ---------------- */
 
   booking.status = "Cancelled";
-
   await booking.save();
 
   /* ---------------- Response ---------------- */
@@ -609,6 +768,5 @@ export const updateUserBookingStatus = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Booking cancelled successfully",
-    data: booking,
   });
 });

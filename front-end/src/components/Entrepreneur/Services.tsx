@@ -14,14 +14,24 @@ import {
 } from "../../hooks/Entrepreneur/useServices";
 import { getChips } from "../../utils/EntrepreneurFilters";
 import Spinner from "../Shared/Spinner";
+import ErrorState from "../../pages/ErrorState";
+import NoInternet from "../../pages/NoInternet";
+import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
+import Pagination from "../Shared/Pagination";
 
 export default function Services() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [open, setOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const isOnline = useNetworkStatus();
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError } = useServices(search, statusFilter);
+  const { data, isLoading, isError, refetch, isFetching } = useServices(
+    search,
+    statusFilter,
+    page,
+  );
 
   const services = data?.services ?? [];
 
@@ -30,10 +40,21 @@ export default function Services() {
     [data?.stats, data?.totalServices],
   );
 
-  if (isLoading) return <Spinner />;
-  if (isError) return <p>Error loading services</p>;
+  if (!isOnline) {
+    return <NoInternet />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        message="Failed to load services"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
+    );
+  }
   return (
-    <div className="flex-1 p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
+    <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
       <Header
         title="Services"
         description={`${data?.totalServices} registered services`}
@@ -48,35 +69,56 @@ export default function Services() {
         }
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <FilterChips
-          chips={chips}
-          active={statusFilter}
-          onChange={setStatusFilter}
-        />
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <FilterChips
+              chips={chips}
+              active={statusFilter}
+              onChange={(value) => {
+                setStatusFilter(value);
+                setPage(1);
+              }}
+            />
 
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search services..."
-          className="w-70 max-lg:w-full"
-        />
-      </div>
+            <SearchInput
+              value={search}
+              onChange={(value) => {
+                setSearch(value);
+                setPage(1);
+              }}
+              placeholder="Search services..."
+              className="w-70 max-lg:w-full"
+            />
+          </div>
 
-      <Table
-        headers={["Title", "Price", "Status", "Created", "Actions"]}
-        data={services}
-        colSpan={6}
-        renderRow={(item) => (
-          <ServicesRow
-            key={item._id}
-            item={item}
-            onEdit={(service) => {
-              setSelectedService(service);
-              setOpen(true);
-            }}
+          <Table
+            headers={["Title", "Price", "Status", "Created", "Actions"]}
+            data={services}
+            colSpan={6}
+            isFetching={isFetching}
+            renderRow={(item) => (
+              <ServicesRow
+                key={item._id}
+                item={item}
+                onEdit={(service) => {
+                  setSelectedService(service);
+                  setOpen(true);
+                }}
+              />
+            )}
           />
-        )}
+        </>
+      )}
+
+      <Pagination
+        page={data?.page ?? 1}
+        totalPages={data?.totalPages ?? 1}
+        onPageChange={setPage}
       />
 
       <SideSheet

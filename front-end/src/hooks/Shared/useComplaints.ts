@@ -2,11 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import axiosApi from "../../lib/axios";
 import toast from "react-hot-toast";
+import type { ComplaintFormType } from "../../types/user/types";
 
-export type ComplaintPayload = {
+export type ComplaintPayload = ComplaintFormType & {
   booking: string;
-  type: string;
-  description: string;
 };
 
 export type ResponseType = {
@@ -88,10 +87,10 @@ type ComplaintApiResponse = {
 };
 
 export const useComplaints = (
-  search = "",
-  status = "All",
-  page = 1,
-  limit = 5,
+  search: string = "",
+  status: string = "All",
+  page: number = 1,
+  limit: number = 5,
 ) => {
   return useQuery({
     queryKey: ["complaints", search, status, page, limit],
@@ -106,6 +105,7 @@ export const useComplaints = (
 
     placeholderData: (prev) => prev,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 };
 

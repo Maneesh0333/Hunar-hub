@@ -2,7 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosApi from "../../lib/axios";
 import toast from "react-hot-toast";
 import type { AxiosError } from "axios";
-import type { UpdateServiceSchemaType } from "../../components/forms/ServiceForm";
+
+import type {
+  ServiceFormType,
+  UpdateServiceSchemaType,
+} from "../../types/admin/types";
 
 export type Service = {
   _id: string;
@@ -43,10 +47,10 @@ export type ResponseType = {
 };
 
 export const useServices = (
-  search = "",
-  status = "All",
-  page = 1,
-  limit = 5,
+  search: string = "",
+  status: string = "All",
+  page: number = 1,
+  limit: number = 5,
 ) => {
   return useQuery({
     queryKey: ["services", search, status, page, limit],
@@ -59,13 +63,19 @@ export const useServices = (
       return data.data;
     },
     placeholderData: (prev) => prev,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 };
 
 export const useCreateServices = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<ResponseType, AxiosError<ResponseType>, any>({
+  return useMutation<
+    ResponseType,
+    AxiosError<ResponseType>,
+    Partial<ServiceFormType>
+  >({
     mutationFn: async (formData) => {
       const res = await axiosApi.post<ResponseType>("/services", formData);
       return res.data;

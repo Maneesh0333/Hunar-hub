@@ -1,11 +1,10 @@
-import type { UseMutationResult } from "@tanstack/react-query";
 import { ActionButton } from "../Shared/ActionButton";
-import type { Category } from "../../hooks/Admin/useCategories";
+import type { Category, useDisableCategories, useEnableCategories } from "../../hooks/Admin/useCategories";
 
 type Props = {
   item: Category;
-  disableMutation: UseMutationResult<any, Error, string>;
-  enableMutation: UseMutationResult<any, Error, string>;
+  disableMutation: ReturnType<typeof useDisableCategories>;
+  enableMutation: ReturnType<typeof useEnableCategories>;
   onEdit: (category: Category) => void;
 };
 

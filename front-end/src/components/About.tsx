@@ -1,4 +1,3 @@
-import React from "react";
 import type { EntrepreneurProfile } from "../hooks/Entrepreneur/useProfile";
 
 type AboutPropsType = {
@@ -14,9 +13,9 @@ function About({ data }: AboutPropsType) {
       </p>
 
       {data && data?.skills?.length > 0 && (
-        <div className="mt-6 flex gap-3">
+        <div className="mt-6 flex flex-wrap gap-3">
           {data?.skills.map((skill) => (
-            <span key={skill} className="inline-block text-[12px] px-3 py-1 font-semibold rounded-full border border-[rgba(196,99,42,0.12)] bg-[var(--cream)] text-[var(--clay)]">
+            <span key={skill} className="text-[12px] px-3 py-1 font-semibold rounded-full border border-[rgba(196,99,42,0.12)] bg-[var(--cream)] text-[var(--clay)]">
               {skill}
             </span>
           ))}

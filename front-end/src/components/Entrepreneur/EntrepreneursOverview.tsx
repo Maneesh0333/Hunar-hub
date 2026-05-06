@@ -1,4 +1,3 @@
-import type { QuickAction } from "../Admin/AdminOverview";
 import BookingsChart from "../charts/BookingsChart";
 import BookingStatusPie from "../charts/BookingStatusPie";
 import QuickActions from "../QuickActions";
@@ -6,16 +5,14 @@ import StatsGrid from "../StatsGrid";
 import Header from "../Shared/Header";
 import { useEntrepreneurDashboard } from "../../hooks/Entrepreneur/useDashboard";
 import Spinner from "../Shared/Spinner";
+import { useAuthStore } from "../../stores/authStore";
+import ErrorState from "../../pages/ErrorState";
+import NoInternet from "../../pages/NoInternet";
+import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
+import type { QuickAction } from "../../types/shared/types";
 
-export type statsDataType = {
-  icon: string;
-  label: string;
-  value: string;
-  change: string;
-  sub: string;
-};
 
-export const entrepreneurActions: QuickAction[] = [
+const entrepreneurActions: QuickAction[] = [
   {
     icon: "➕",
     title: "Add Service",
@@ -25,8 +22,8 @@ export const entrepreneurActions: QuickAction[] = [
   {
     icon: "📦",
     title: "View Requests",
-    description: "5 awaiting response",
-    path: "/entrepreneur/orders",
+    description: "View the booking requests",
+    path: "/entrepreneur/booking",
   },
   {
     icon: "📅",
@@ -43,7 +40,10 @@ export const entrepreneurActions: QuickAction[] = [
 ];
 
 export default function OverviewPage() {
-  const { data, isLoading, isError, error } = useEntrepreneurDashboard();
+  const { data, isLoading, isError, refetch, isFetching } =
+    useEntrepreneurDashboard();
+  const user = useAuthStore((state) => state.user);
+  const isOnline = useNetworkStatus();
 
   const statsData = [
     {
@@ -69,34 +69,53 @@ export default function OverviewPage() {
     },
   ];
 
-  if (isLoading) return <Spinner />;
-  if (isError) return <p>Error: {error.message}</p>;
+  if (!isOnline) {
+    return <NoInternet />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        message="Failed to load stats"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
+    );
+  }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
+    <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
       {/* GREETING */}
+
       <Header
         title="Good morning,"
         description="Here's how your business is performing today"
-        name="Rashida"
+        name={user?.name}
       />
 
-      {/* STATS */}
-      <StatsGrid statsData={statsData} />
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
+        </div>
+      ) : (
+        <>
+          <StatsGrid statsData={statsData} className="xl:grid-cols-3!" />
 
-      {/* CHART + Pie */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <BookingsChart
-          data={data?.charts?.monthlyBookings || []}
-          total={data?.stats?.totalOrders || 0}
-        />
-        <BookingStatusPie
-          data={data?.charts?.statusStats || []}
-          total={data?.stats?.totalOrders || 0}
-        />
-      </div>
+          {/* CHART + Pie */}
+          <div className="flex gap-5 max-[1300px]:flex-col">
+            <BookingsChart
+              data={data?.charts?.monthlyBookings || []}
+              total={data?.stats?.totalOrders || 0}
+            />
+            <BookingStatusPie
+              data={data?.charts?.statusStats || []}
+              total={data?.stats?.totalOrders || 0}
+            />
+          </div>
 
-      <QuickActions actions={entrepreneurActions} />
+          <QuickActions actions={entrepreneurActions} />
+        </>
+      )}
     </div>
   );
 }

@@ -2,10 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosApi from "../../lib/axios";
 import toast from "react-hot-toast";
 import type { AxiosError } from "axios";
-import type {
-  FormType,
-  UpdateCategorySchemaType,
-} from "../../components/forms/CategoryForm";
+import type { CategoryFormType } from "../../types/admin/types";
+import type { UpdateCategorySchemaType } from "../../schema/admin/category.schema";
+
 
 export type CategoriesStats = {
   Active: number;
@@ -50,50 +49,38 @@ type ApiResponseAllCategories = {
   data: CategoryLite[];
 };
 
-export const useCategories = (status: string, search: string) => {
+export const useCategories = (
+  search: string = "",
+  status: string = "All",
+  page: number = 1,
+  limit: number = 5,
+) => {
   return useQuery({
-    queryKey: ["categories", status, search],
+    queryKey: ["categories", status, search, page, limit],
 
     queryFn: async () => {
-      const { data } = await axiosApi.get<ApiResponse>("/categories", {
-        params: { status, search },
+      const res = await axiosApi.get<ApiResponse>("/categories", {
+        params: { status, search, page, limit },
       });
-
-      const res = data.data;
-
-      return {
-        page: res.page ?? 1,
-        limit: res.limit ?? 10,
-        total: res.total ?? 0,
-        totalCategories: res.totalCategories ?? 0,
-        totalPages: res.totalPages ?? 1,
-        results: res.results ?? 0,
-        stats: res.stats ?? { Active: 0, InActive: 0 },
-        categories: res.categories ?? [],
-      };
+      return res.data.data;
     },
-
-    initialData: {
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 1,
-      results: 0,
-      totalCategories: 0,
-      stats: { Active: 0, InActive: 0 },
-      categories: [],
-    },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 };
 
-export const useAllCategories = () => {
+export const useAllCategories = (limit: number = 12) => {
   return useQuery<CategoryLite[]>({
-    queryKey: ["categories-all"],
+    queryKey: ["categories-all", limit],
 
     queryFn: async () => {
-      const { data } =
-        await axiosApi.get<ApiResponseAllCategories>("/categories/all");
-      return data.data;
+      const res = await axiosApi.get<ApiResponseAllCategories>(
+        "/categories/all",
+        {
+          params: { limit },
+        },
+      );
+      return res.data.data;
     },
     placeholderData: (prev) => prev,
     refetchOnWindowFocus: false,
@@ -108,7 +95,7 @@ export type ResponseType = {
 export const useCreateCategories = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<ResponseType, AxiosError<ResponseType>, FormType>({
+  return useMutation<ResponseType, AxiosError<ResponseType>, CategoryFormType>({
     mutationFn: async (formData) => {
       const res = await axiosApi.post<ResponseType>("/categories", formData);
       return res.data;

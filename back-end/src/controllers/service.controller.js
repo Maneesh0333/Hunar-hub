@@ -5,8 +5,7 @@ import { asyncHandler } from "../middleware/async.middleware.js";
 import mongoose from "mongoose";
 
 export const createService = asyncHandler(async (req, res) => {
-  const { title, description, price, priceUnit, deliveryTime } =
-    req.body;
+  const { title, description, price, priceUnit, deliveryTime } = req.body;
 
   const entrepreneur = await Entrepreneur.findOne({
     user: req.user.id,
@@ -96,7 +95,6 @@ export const getMyServices = asyncHandler(async (req, res) => {
   if (status !== "All") {
     matchStage.isActive = status === "Active";
   }
-
 
   if (search) {
     matchStage.$text = { $search: search };
@@ -230,7 +228,7 @@ export const updateService = asyncHandler(async (req, res) => {
       _id: req.params.id,
       entrepreneur: entrepreneur._id,
     },
-    req.body,
+    { $set: req.body },
     { new: true, runValidators: true },
   );
 
@@ -241,6 +239,5 @@ export const updateService = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Service updated successfully",
-    data: service,
   });
 });

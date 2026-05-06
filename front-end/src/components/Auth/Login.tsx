@@ -1,76 +1,17 @@
 import { useForm } from "react-hook-form";
-import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../stores/authStore";
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import axiosApi from "../../lib/axios";
-import toast from "react-hot-toast";
 import Header from "./Header";
 import InputField from "../Shared/InputField";
 import Button from "./Button";
 import Verify from "./Verify";
-
-
-const loginSchema = yup.object({
-  email: yup
-    .string()
-    .trim()
-    .email("Invalid email format")
-    .required("Email is required")
-    .transform((value) => value.toLowerCase()),
-
-  password: yup
-    .string()
-    .required("Password is required")
-    .min(6, "Password must be at least 6 characters")
-    .matches(/[A-Za-z]/, "Password must contain at least one letter")
-    .matches(/[0-9]/, "Password must contain at least one number"),
-});
+import { useLogin } from "../../hooks/Auth/useLogin";
+import { loginSchema } from "../../schema/auth/auth.schema";
+import type { LoginFormType } from "../../types/auth/types";
 
 type PageType = "Login" | "Verify";
 
-type LoginFormType = yup.InferType<typeof loginSchema>;
-// ---------------------
-// Backend response types
-// ---------------------
-interface LoginSuccessResponse {
-  success: true;
-  message: string;
-  data: {
-    accessToken: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      phone: string;
-      role: string;
-    };
-  };
-}
-
-interface LoginRequiresVerification {
-  success: false;
-  message: string;
-  requiresVerification: true;
-  email: string;
-}
-
-interface LoginEntrepreneurPending {
-  success: false;
-  message: string;
-  entrepreneurStatus: "PENDING" | "REJECTED";
-}
-
-type LoginResponse =
-  | LoginSuccessResponse
-  | LoginRequiresVerification
-  | LoginEntrepreneurPending;
-
 function Login() {
-  const navigate = useNavigate();
-  const { login } = useAuthStore.getState();
   const [page, setPage] = useState<PageType>("Login");
   const [email, setEmail] = useState("");
 
@@ -83,61 +24,20 @@ function Login() {
     mode: "onChange",
   });
 
-  // ---------------------
-  // Login mutation
-  // ---------------------
-  const loginMutation = useMutation<LoginResponse, any, LoginFormType>({
-    mutationFn: async (formData) => {
-      const res = await axiosApi.post("/auth/login", formData);
-      return res.data;
-    },
-    onSuccess: (data) => {
-      // 2xx success response
-      if (!data.success) {
-        toast.error(data.message);
-        return;
-      }
-      login(data.data);
-        toast.success(data.message);
-        navigate("/redirect");
-    },
-    onError: (error, variables) => {
-      // Network error
-      if (!error.response) {
-        toast.error("Network error, please try again later.");
-        return;
-      }
-
-      const { status, data } = error.response as {
-        status: number;
-        data: LoginResponse;
-      };
-
-      // Handle backend errors
-      switch (status) {
-        case 401:
-          toast.error(data.message || "Invalid credentials");
-          break;
-        case 403:
-          if ("requiresVerification" in data && data.requiresVerification) {
-            toast.error(data.message);
-            setPage("Verify");
-            setEmail(variables.email);
-          } else if ("entrepreneurStatus" in data) {
-            toast.error(data.message);
-          }
-          break;
-        case 500:
-          toast.error(data.message || "Server error, please try again later");
-          break;
-        default:
-          toast.error(data.message || "Login failed");
-      }
-    },
-  });
+  const loginMutation = useLogin();
 
   const onSubmit = (formData: LoginFormType) => {
-    loginMutation.mutate(formData);
+    loginMutation.mutate(formData, {
+      onError: (error, data) => {
+        if (
+          error.response &&
+          error.response.data?.code === "EMAIL_NOT_VERIFIED"
+        ) {
+          setPage("Verify");
+          setEmail(data.email);
+        }
+      },
+    });
   };
 
   return (
@@ -187,7 +87,7 @@ function Login() {
           </form>
         </div>
       ) : (
-        <Verify email={email} />
+        <Verify setPage={setPage} goto="Login" email={email} />
       )}
     </>
   );

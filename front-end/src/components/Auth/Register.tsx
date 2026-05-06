@@ -1,115 +1,61 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import InputField from "../Shared/InputField";
-import * as yup from "yup";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Header from "./Header";
 
 import Button from "./Button";
 import type { Step } from "./Stepper";
-import { useMutation } from "@tanstack/react-query";
-import axiosApi from "../../lib/axios";
 
-const registerSchema = yup.object({
-  name: yup
-    .string()
-    .trim()
-    .required("Name is required")
-    .min(3, "Name must be at least 3 characters")
-    .max(100, "Name is too long"),
-
-  email: yup
-    .string()
-    .trim()
-    .email("Invalid email format")
-    .required("Email is required")
-    .lowercase()
-    .transform((value) => value.toLowerCase()),
-
-  password: yup
-    .string()
-    .required("Password is required")
-    .min(6, "Password must be at least 6 characters")
-    .matches(/[A-Za-z]/, "Password must contain at least one letter")
-    .matches(/[0-9]/, "Password must contain at least one number"),
-
-  phone: yup
-    .string()
-    .required("Phone number is required")
-    .matches(/^[0-9]{10,15}$/, "Invalid phone number"),
-
-  signupAs: yup
-    .string()
-    .oneOf(["User", "Entrepreneur"], "Invalid role")
-    .required("Role is required"),
-});
-
-type RegisterFormType = yup.InferType<typeof registerSchema>;
+import { useRegister } from "../../hooks/Auth/useRegister";
+import type { RegisterFormType } from "../../types/auth/types";
+import { registerSchema } from "../../schema/auth/auth.schema";
 
 type RegisterProps = {
   setCurrentStep: (step: Step) => void;
-  setEmail: (email: string)=>void;
+  setEmail: (email: string) => void;
+  role: "User" | "Entrepreneur";
 };
 
-
-interface RegisterResponse {
-  success: true;
-  message: string;
-}
-
-function Register({ setCurrentStep, setEmail }: RegisterProps) {
+function Register({ setCurrentStep, setEmail, role }: RegisterProps) {
   const {
     handleSubmit,
     register,
-    watch,
+    control,
+    reset,
     setValue,
     formState: { errors, isValid },
   } = useForm<RegisterFormType>({
     resolver: yupResolver(registerSchema),
     mode: "onChange",
-    defaultValues: {
-      signupAs: "User",
-    },
   });
 
-  const signupAs = watch("signupAs");
+  useEffect(() => {
+    if (role) {
+      reset({ signupAs: role });
+    }
+  }, [role, reset]);
 
-  const resiterMutation = useMutation<RegisterResponse, any, RegisterFormType>({
-    mutationFn: async (formData) => {
-      const res = await axiosApi.post("/auth/register", formData);
-      return res.data;
-    },
-    onSuccess: (data, variables) => {
-      // 2xx success response
-      if (data.success) {
-        alert(data.message);
-        setCurrentStep("Verify");
-        setEmail(variables.email)
-      }
-    },
-    onError: (error: any) => {
-      // Network error
-      if (!error.response) {
-        alert("Network error, please try again later.");
-        return;
-      }
-
-      const {  data } = error.response as {
-        status: number;
-        data: RegisterResponse;
-      };
-
-      alert(data.message || "Login failed");
-    },
+  const signupAs = useWatch({
+    control,
+    name: "signupAs",
   });
+
+  const resiterMutation = useRegister();
 
   const onSubmit = (formData: RegisterFormType) => {
-    resiterMutation.mutate(formData);
+    resiterMutation.mutate(formData, {
+      onSuccess: (data, variables) => {
+        if (data.success) {
+          setCurrentStep("Verify");
+          setEmail(variables.email);
+        }
+      },
+    });
   };
 
   return (
-    <div>
-      {/* Title */}
+    <>
       <Header
         title="Join HunarHub"
         description="Create your account and discover local artisans in minutes."
@@ -194,9 +140,14 @@ function Register({ setCurrentStep, setEmail }: RegisterProps) {
         </div>
 
         {/* Submit */}
-        <Button type="submit" isValid={isValid} label="Create Account →" isLoading={resiterMutation.isPending} />
+        <Button
+          type="submit"
+          isValid={isValid}
+          label="Create Account →"
+          isLoading={resiterMutation.isPending}
+        />
       </form>
-    </div>
+    </>
   );
 }
 

@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Header from "../Shared/Header";
 import {
   useAvailability,
   useSaveAvailability,
 } from "../../hooks/Entrepreneur/useAvailability";
 import Spinner from "../Shared/Spinner";
+import NoInternet from "../../pages/NoInternet";
+import ErrorState from "../../pages/ErrorState";
+import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
 
 type ISODate = `${number}-${number}-${number}`;
 
@@ -66,25 +69,20 @@ export default function AvailabilityCalendar() {
   const [year, setYear] = useState(() => today.getFullYear());
   const [monthIndex, setMonthIndex] = useState(() => today.getMonth());
 
-  const [savedUnavailableDays, setSavedUnavailableDays] = useState<
-    Set<ISODate>
-  >(new Set());
   const [draftUnavailableDays, setDraftUnavailableDays] = useState<
     Set<ISODate>
   >(new Set());
 
   const [canEdit, setCanEdit] = useState(false);
 
-  const { data, isLoading } = useAvailability();
+  const isOnline = useNetworkStatus();
+
+  const { data, isLoading, isError, isFetching, refetch } = useAvailability();
   const { mutate: saveAvailability, isPending } = useSaveAvailability();
 
-  // 🔄 Sync API data → state
-  useEffect(() => {
-    if (data) {
-      const set = new Set(data.unavailableDates as ISODate[]);
-      setSavedUnavailableDays(set);
-      setDraftUnavailableDays(set);
-    }
+  /* ✅ DERIVED STATE (no effect needed) */
+  const savedUnavailableDays = useMemo(() => {
+    return new Set((data?.unavailableDates ?? []) as ISODate[]);
   }, [data]);
 
   const days = generateCalendar(year, monthIndex);
@@ -107,7 +105,13 @@ export default function AvailabilityCalendar() {
 
     setDraftUnavailableDays((prev) => {
       const next = new Set(prev);
-      next.has(iso) ? next.delete(iso) : next.add(iso);
+
+      if (next.has(iso)) {
+        next.delete(iso);
+      } else {
+        next.add(iso);
+      }
+
       return next;
     });
   }
@@ -124,9 +128,6 @@ export default function AvailabilityCalendar() {
       { unavailableDates: datesArray },
       {
         onSuccess: () => {
-          const set = new Set(datesArray as ISODate[]);
-          setSavedUnavailableDays(set);
-          setDraftUnavailableDays(set);
           setCanEdit(false);
         },
       },
@@ -138,8 +139,15 @@ export default function AvailabilityCalendar() {
     setCanEdit(false);
   }
 
+  function resetEditState() {
+    setCanEdit(false);
+    setDraftUnavailableDays(new Set(savedUnavailableDays));
+  }
+
   function prevMonth() {
     if (canEdit || isPastMonth()) return;
+
+    resetEditState();
 
     if (monthIndex === 0) {
       setMonthIndex(11);
@@ -152,6 +160,8 @@ export default function AvailabilityCalendar() {
   function nextMonth() {
     if (canEdit) return;
 
+    resetEditState();
+
     if (monthIndex === 11) {
       setMonthIndex(0);
       setYear((y) => y + 1);
@@ -160,16 +170,20 @@ export default function AvailabilityCalendar() {
     }
   }
 
-  useEffect(() => {
-    setCanEdit(false);
-    setDraftUnavailableDays(new Set(savedUnavailableDays));
-  }, [monthIndex, year]);
+  if (!isOnline) return <NoInternet />;
 
-  // ⏳ Loading state
-  if (isLoading) return <Spinner />;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Failed to load availability details"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
+    );
+  }
 
   return (
-    <div className="flex-1 p-6 bg-[#FAF5ED] rounded-xl space-y-6 text-[#2C1A0E]">
+    <div className="flex-1 flex flex-col bg-[#FAF5ED] rounded-xl space-y-6 text-[#2C1A0E]">
       <Header
         title="Availability"
         description="Select days you are available"
@@ -182,96 +196,109 @@ export default function AvailabilityCalendar() {
             <button
               onClick={prevMonth}
               disabled={isPastMonth()}
-              className="px-3 py-1 border rounded disabled:opacity-40"
+              className="px-3 py-1 border border-gray-500 cursor-pointer rounded disabled:opacity-40"
             >
               ←
             </button>
 
-            <button onClick={nextMonth} className="px-3 py-1 border rounded">
+            <button
+              onClick={nextMonth}
+              className="px-3 py-1 border border-gray-500 cursor-pointer rounded"
+            >
               →
             </button>
           </div>
         }
       />
 
-      <div className="grid grid-cols-7 text-center text-xs font-medium text-[#6B4A2D]">
-        {WEEKDAYS.map((d) => (
-          <div key={d}>{d}</div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 gap-px bg-[#E8D8C5] rounded-lg overflow-hidden border border-[var(--border-1)]">
-        {days.map((day, i) => {
-          const isCurrentMonth = i >= startIndex && i <= endIndex;
-
-          const iso = toISODate(year, monthIndex, day);
-          const isPast = isCurrentMonth && isPastISODate(iso);
-
-          const activeSet = canEdit
-            ? draftUnavailableDays
-            : savedUnavailableDays;
-          const isUnavailable = isCurrentMonth && activeSet.has(iso);
-
-          return (
-            <div
-              key={i}
-              onClick={() => toggleDay(day, isCurrentMonth)}
-              className={`
-                h-16 flex items-center justify-center text-sm
-                ${!isCurrentMonth ? "bg-[#F1E6D8] text-gray-400" : ""}
-                ${isPast ? "bg-gray-200 text-gray-400 cursor-not-allowed" : ""}
-                ${
-                  isCurrentMonth && !isPast && !isUnavailable
-                    ? "bg-green-500 text-white cursor-pointer"
-                    : ""
-                }
-                ${isUnavailable ? "bg-red-500 text-white cursor-pointer" : ""}
-                ${canEdit && isCurrentMonth && !isPast ? "hover:opacity-80" : ""}
-              `}
-            >
-              {day}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="flex justify-between items-center">
-        <div className="flex gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded-sm" />
-            Available
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-500 rounded-sm" />
-            Unavailable
-          </div>
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
         </div>
-
-        {!canEdit ? (
-          <button
-            onClick={startEditing}
-            className="px-4 py-2 rounded-lg bg-[#C4632A] text-white font-semibold"
-          >
-            Manage Schedule
-          </button>
-        ) : (
-          <div className="flex gap-2">
-            <button
-              onClick={saveChanges}
-              disabled={isPending}
-              className="px-4 py-2 rounded-lg bg-green-600 text-white font-semibold disabled:opacity-50"
-            >
-              {isPending ? "Saving..." : "Save"}
-            </button>
-            <button
-              onClick={cancelChanges}
-              className="px-4 py-2 rounded-lg bg-gray-500 text-white font-semibold"
-            >
-              Cancel
-            </button>
+      ) : (
+        <>
+          <div className="grid grid-cols-7 text-center text-xs font-medium text-[#6B4A2D]">
+            {WEEKDAYS.map((d) => (
+              <div key={d}>{d}</div>
+            ))}
           </div>
-        )}
-      </div>
+
+          <div className="grid grid-cols-7 gap-px bg-[#E8D8C5] rounded-lg overflow-hidden border border-[var(--border-1)]">
+            {days.map((day, i) => {
+              const isCurrentMonth = i >= startIndex && i <= endIndex;
+
+              const iso = toISODate(year, monthIndex, day);
+              const isPast = isCurrentMonth && isPastISODate(iso);
+
+              const activeSet = canEdit
+                ? draftUnavailableDays
+                : savedUnavailableDays;
+
+              const isUnavailable = isCurrentMonth && activeSet.has(iso);
+
+              return (
+                <div
+                  key={i}
+                  onClick={() => toggleDay(day, isCurrentMonth)}
+                  className={`
+                    h-16 flex items-center justify-center text-sm
+                    ${!isCurrentMonth ? "bg-[#F1E6D8] text-gray-400" : ""}
+                    ${isPast ? "bg-gray-200 text-gray-400 cursor-not-allowed" : ""}
+                    ${
+                      isCurrentMonth && !isPast && !isUnavailable
+                        ? "bg-green-500 text-white cursor-pointer"
+                        : ""
+                    }
+                    ${isUnavailable ? "bg-red-500 text-white cursor-pointer" : ""}
+                    ${canEdit && isCurrentMonth && !isPast ? "hover:opacity-80" : ""}
+                  `}
+                >
+                  {day}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-between items-center">
+            <div className="flex gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-500 rounded-sm" />
+                Available
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-red-500 rounded-sm" />
+                Unavailable
+              </div>
+            </div>
+
+            {!canEdit ? (
+              <button
+                onClick={startEditing}
+                className="px-4 py-2 rounded-lg bg-[#C4632A] cursor-pointer text-white font-semibold"
+              >
+                Manage Schedule
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={saveChanges}
+                  disabled={isPending}
+                  className="px-4 py-2 rounded-lg bg-green-600 cursor-pointer text-white font-semibold disabled:opacity-50"
+                >
+                  {isPending ? "Saving..." : "Save"}
+                </button>
+
+                <button
+                  onClick={cancelChanges}
+                  className="px-4 py-2 rounded-lg bg-gray-500 cursor-pointer   text-white font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

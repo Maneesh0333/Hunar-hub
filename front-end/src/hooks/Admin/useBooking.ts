@@ -48,16 +48,16 @@ type ApiResponse = {
 };
 
 export const useAdminBookings = (
-  search = "",
-  status = "All",
-  page = 1,
-  limit = 10,
+  search: string = "",
+  status: string = "All",
+  page: number = 1,
+  limit: number = 5,
 ) => {
   return useQuery({
     queryKey: ["admin-bookings", search, status, page, limit],
 
     queryFn: async () => {
-      const { data } = await axiosApi.get<ApiResponse>("/admin/bookings", {
+      const { data } = await axiosApi.get<ApiResponse>("/bookings/all", {
         params: { search, status, page, limit },
       });
 
@@ -66,5 +66,6 @@ export const useAdminBookings = (
 
     placeholderData: (prev) => prev,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 };

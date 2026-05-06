@@ -1,12 +1,15 @@
-import type { UseMutationResult } from "@tanstack/react-query";
-import type { Entrepreneur } from "../../hooks/Admin/useEntrepreneurs";
+import type {
+  Entrepreneur,
+  useBlockEntrepreneur,
+  useUnblockEntrepreneur,
+} from "../../hooks/Admin/useEntrepreneurs";
 import { ActionButton } from "../Shared/ActionButton";
 import { memo } from "react";
 
 type Props = {
   item: Entrepreneur;
-  blockMutation: UseMutationResult<any, Error, string>;
-  unblockMutation: UseMutationResult<any, Error, string>;
+  blockMutation: ReturnType<typeof useBlockEntrepreneur>;
+  unblockMutation: ReturnType<typeof useUnblockEntrepreneur>;
 };
 
 export default memo(function EntrepreneurRow({

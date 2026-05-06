@@ -1,11 +1,14 @@
-import type { UseMutationResult } from "@tanstack/react-query";
-import type { Entrepreneur } from "../../hooks/Admin/useEntrepreneurs";
+import type {
+  Entrepreneur,
+  useApproveEntrepreneur,
+  useRejectEntrepreneur,
+} from "../../hooks/Admin/useEntrepreneurs";
 import { ActionButton } from "../Shared/ActionButton";
 
 type Props = {
   item: Entrepreneur;
-  approveMutation: UseMutationResult<any, Error, string>;
-  rejectMutation: UseMutationResult<any, Error, string>;
+  approveMutation: ReturnType<typeof useApproveEntrepreneur>;
+  rejectMutation: ReturnType<typeof useRejectEntrepreneur>;
 };
 
 export default function EntrepreneurApplicationRow({

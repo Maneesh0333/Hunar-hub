@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { QuickAction } from "./Admin/AdminOverview";
+import type { QuickAction } from "../types/shared/types";
 
 
 type QuickActionsProps = {

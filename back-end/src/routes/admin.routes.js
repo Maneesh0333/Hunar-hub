@@ -5,33 +5,39 @@ import {
   unblockUser,
   approveEntrepreneur,
   rejectEntrepreneur,
-  getAllBookingsAdmin,
   getAllServicesAdmin,
   getEntrepreneurs,
   getUsers,
   getAdminDashboard,
+  deleteReview,
+  getReviews,
 } from "../controllers/admin.controller.js";
+import { validateObjectId } from "../middleware/validateObjectId.middleware.js";
 
 const router = express.Router();
-
-router.get("/dashboard", getAdminDashboard)
 
 // Protect all admin routes
 router.use(isAuthenticated);
 router.use(restrictTo("Admin"));
 
+/* ================= DASHBOARD ================= */
+router.get("/dashboard", getAdminDashboard);
+router.get("/reviews", getReviews);
+router.delete("/reviews/:id", validateObjectId, deleteReview);
+
 /* ================= USERS ================= */
 router.get("/users", getUsers);
-router.patch("/users/:id/block", blockUser);
-router.patch("/users/:id/unblock", unblockUser);
+router.patch("/users/:id/block", validateObjectId, blockUser);
+router.patch("/users/:id/unblock", validateObjectId, unblockUser);
 
 /* ================= ENTREPRENEURS ================= */
 router.get("/entrepreneurs", getEntrepreneurs);
-router.patch("/entrepreneurs/:id/approve", approveEntrepreneur);
-router.patch("/entrepreneurs/:id/reject", rejectEntrepreneur);
-
-/* ================= BOOKINGS ================= */
-router.get("/bookings", getAllBookingsAdmin);
+router.patch(
+  "/entrepreneurs/:id/approve",
+  validateObjectId,
+  approveEntrepreneur,
+);
+router.patch("/entrepreneurs/:id/reject", validateObjectId, rejectEntrepreneur);
 
 /* ================= SERVICES ================= */
 router.get("/services", getAllServicesAdmin);

@@ -45,5 +45,6 @@ export const useAdminDashboard = () => {
     },
     placeholderData: (prev) => prev,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 };

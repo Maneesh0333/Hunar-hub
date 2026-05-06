@@ -120,7 +120,7 @@ export const getComplaints = asyncHandler(async (req, res) => {
               createdAt: 1,
               customerName: "$customerInfo.name",
               customerPhone: "$customerInfo.phone",
-              entrepreneurName: "$entUser.name", 
+              entrepreneurName: "$entUser.name",
               bookingId: "$bookingDetails.bookingId",
               bookingStatus: "$bookingDetails.status",
               entrepreneurId: "$entProfile._id",
@@ -174,15 +174,13 @@ export const updateComplaintStatus = asyncHandler(async (req, res) => {
   const validStatuses = ["In Review", "Resolved"];
 
   if (!validStatuses.includes(status)) {
-    res.status(400);
-    throw new Error("Invalid status value");
+    throw new AppError("Invalid status value", 400);
   }
 
-  const complaint = await Complaint.findById(id);
+  const complaint = await Complaint.findById(id).select("_id status");
 
   if (!complaint) {
-    res.status(404);
-    throw new Error("Complaint not found");
+    throw new AppError("Complaint not found", 404);
   }
 
   // 🚫 Prevent redundant update
@@ -195,13 +193,11 @@ export const updateComplaintStatus = asyncHandler(async (req, res) => {
 
   // 🚫 Prevent invalid transitions
   if (complaint.status === "Resolved") {
-    res.status(400);
-    throw new Error("Resolved complaints cannot be modified");
+    throw new AppError("Resolved complaints cannot be modified", 400);
   }
 
   if (complaint.status === "Open" && status === "Resolved") {
-    res.status(400);
-    throw new Error("Move complaint to 'In Review' before resolving");
+    throw new AppError("Move complaint to 'In Review' before resolving", 400);
   }
 
   // ✅ Valid update

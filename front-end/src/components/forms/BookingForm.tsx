@@ -1,29 +1,13 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
-import * as yup from "yup";
 import SelectInput from "../Shared/SelectInput";
 import Button from "../Shared/Button";
 
 import { usePublicServices } from "../../hooks/User/usePublicServices ";
 import { useCreateBooking } from "../../hooks/User/useBooking";
+import type { bookingSchemaType } from "../../types/user/types";
+import { bookingSchema } from "../../schema/user/booking.schema";
 
-export const bookingSchema = yup.object({
-  service: yup.string().trim().required("Service name is required"),
-
-  requirements: yup
-    .string()
-    .trim()
-    .max(300, "requirements cannot exceed 300 characters")
-    .optional()
-    .default(""),
-
-  visitType: yup
-    .string()
-    .oneOf(["visit_home", "visit_workshop"])
-    .required("Visit Type is required"),
-});
-
-export type bookingSchemaType = yup.InferType<typeof bookingSchema>;
 
 type Props = {
   servicesId: string | undefined;

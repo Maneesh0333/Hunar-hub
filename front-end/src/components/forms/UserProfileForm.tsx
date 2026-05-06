@@ -1,36 +1,13 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
-import * as yup from "yup";
 
 import InputField from "../Shared/InputField";
 import Button from "../Shared/Button";
 import { useUpdateProfile, type Profile } from "../../hooks/User/useProfile ";
+import type { UserProfileFormValues } from "../../types/user/types";
+import { userProfileSchema } from "../../schema/user/user.schems";
 
-export const userProfileSchema = yup.object({
-  name: yup
-    .string()
-    .trim()
-    .required("Name is required")
-    .min(2, "Name must be at least 2 characters")
-    .max(50, "Name is too long"),
-
-  email: yup
-    .string()
-    .trim()
-    .required("Email is required")
-    .email("Invalid email"),
-
-  phone: yup
-    .string()
-    .trim()
-    .required("Phone is required")
-    .matches(/^[0-9]{10,15}$/, "Invalid phone number"),
-
-  city: yup.string().trim().max(30, "City is too long").optional().default(""),
-});
-
-export type UserProfileFormValues = yup.InferType<typeof userProfileSchema>;
 
 type Props = {
   profile: Profile | undefined;
@@ -67,8 +44,6 @@ export default function UserProfileForm({ profile, closeSheet }: Props) {
         Object.keys(dirtyFields).includes(key),
       ),
     );
-
-    console.log(updatedData)
 
     updateMutation.mutate(updatedData, {
       onSuccess: () => {

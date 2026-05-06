@@ -8,14 +8,21 @@ import { getChips } from "../../utils/EntrepreneurFilters";
 import { useAdminBookings } from "../../hooks/Admin/useBooking";
 import AdminBookingRow from "./AdminBookingRow";
 import Spinner from "../Shared/Spinner";
+import ErrorState from "../../pages/ErrorState";
+import NoInternet from "../../pages/NoInternet";
+import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
+import Pagination from "../Shared/Pagination";
 
 export default function AdminBookingPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const isOnline = useNetworkStatus();
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError, isFetching } = useAdminBookings(
+  const { data, isLoading, isError, isFetching, refetch } = useAdminBookings(
     search,
     statusFilter,
+    page,
   );
 
   const bookings = data?.bookings ?? [];
@@ -24,11 +31,22 @@ export default function AdminBookingPage() {
     () => [...getChips(data?.stats, data?.total)],
     [data?.stats, data?.total],
   );
-  
-  if (isError) return <p className="flex-1 flex items-center justify-center">Error loading bookings</p>;
 
+  if (!isOnline) {
+    return <NoInternet />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        message="Failed to load bookings"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
+    );
+  }
   return (
-    <div className="flex-1 flex flex-col p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
+    <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
       <Header
         title="All Bookings"
         description={`${data?.total || 0} total bookings`}
@@ -44,12 +62,18 @@ export default function AdminBookingPage() {
             <FilterChips
               chips={chips}
               active={statusFilter}
-              onChange={setStatusFilter}
+              onChange={(value) => {
+                setStatusFilter(value);
+                setPage(1);
+              }}
             />
 
             <SearchInput
               value={search}
-              onChange={setSearch}
+              onChange={(value) => {
+                setSearch(value);
+                setPage(1);
+              }}
               placeholder="Search bookings..."
               className="w-70 max-lg:w-full"
             />
@@ -69,6 +93,11 @@ export default function AdminBookingPage() {
             colSpan={7}
             isFetching={isFetching}
             renderRow={(item) => <AdminBookingRow key={item._id} item={item} />}
+          />
+          <Pagination
+            page={page}
+            totalPages={data?.totalPages ?? 1}
+            onPageChange={setPage}
           />
         </>
       )}

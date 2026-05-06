@@ -7,13 +7,11 @@ import {
 
 type Props = {
   item: Booking;
+  statusMutation: ReturnType<typeof useUpdateBookingStatus>
+  paymentStatusMutation: ReturnType<typeof useUpdatePaymentStatus>
 };
 
-export default function BookingRow({ item }: Props) {
-  const statusMutation = useUpdateBookingStatus();
-  const paymentStatusMutation = useUpdatePaymentStatus();
-
-  /* ---------------- Loading States ---------------- */
+export default function BookingRow({ item, paymentStatusMutation, statusMutation }: Props) {
 
   const isUpdating = statusMutation.isPending;
 
@@ -65,22 +63,18 @@ export default function BookingRow({ item }: Props) {
         </div>
       </td>
 
-      {/* 🛠 Service */}
       <td className="px-4 py-4">{item.service.title}</td>
 
-      {/* 💰 Price */}
       <td className="px-4 py-4">₹{item.totalAmount}</td>
 
-      {/* 📍 Visit Type */}
-      <td className="px-4 py-4 min-w-28">
+      <td className="px-4 py-4">
         {item.visitType === "visit_home" ? "Home Visit" : "Workshop"}
       </td>
 
-      <td className="px-4 py-4 min-w-3xs">
+      <td className="px-4 py-4">
         {item.requirements || "No requirements added"}
       </td>
 
-      {/* 💳 Payment Status */}
       <td className="px-4 py-4 whitespace-nowrap">
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -110,7 +104,7 @@ export default function BookingRow({ item }: Props) {
       </td>
 
       {/* ⚡ Actions */}
-      <td className="px-4 py-4 flex gap-2 whitespace-nowrap">
+      <td className="px-4 py-4 flex-1 flex items-center justify-center gap-2 whitespace-nowrap">
         {item.status === "Pending" && (
           <>
             <ActionButton

@@ -15,6 +15,10 @@ import SideSheet from "../Shared/SideSheet";
 import Button from "../Shared/Button";
 import CategoryForm from "../forms/CategoryForm";
 import Spinner from "../Shared/Spinner";
+import ErrorState from "../../pages/ErrorState";
+import NoInternet from "../../pages/NoInternet";
+import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
+import Pagination from "../Shared/Pagination";
 
 export default function Categories() {
   const [activeFilter, setActiveFilter] = useState("All");
@@ -23,34 +27,40 @@ export default function Categories() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null,
   );
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError, isFetching } = useCategories(
-    activeFilter,
+  const { data, isLoading, isError, isFetching, refetch } = useCategories(
     search,
+    activeFilter,
+    page,
   );
 
   const enableMutation = useEnableCategories();
   const disableMutation = useDisableCategories();
+  const isOnline = useNetworkStatus();
 
-  if (isLoading) return <p>Loading...</p>;
-  if (isError) return <p>Error loading entrepreneurs</p>;
-
-  const users = data?.categories ?? [];
-
+  const categories = data?.categories ?? [];
   const chips = getChips(data?.stats, data?.totalCategories);
 
-  if (isError)
+  if (!isOnline) {
+    return <NoInternet />;
+  }
+
+  if (isError) {
     return (
-      <p className="flex-1 flex items-center justify-center">
-        Error loading Categories
-      </p>
+      <ErrorState
+        message="Failed to load categories"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
     );
+  }
 
   return (
-    <div className="flex-1 flex flex-col p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
+    <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
       <Header
         title="Categories"
-        description={`${data?.totalCategories} registered Categories`}
+        description={`${data?.totalCategories || 0} registered Categories`}
         children={
           <Button
             label="+ Add Category"
@@ -72,12 +82,18 @@ export default function Categories() {
             <FilterChips
               chips={chips.reverse()}
               active={activeFilter}
-              onChange={setActiveFilter}
+              onChange={(value) => {
+                setActiveFilter(value);
+                setPage(1);
+              }}
             />
 
             <SearchInput
               value={search}
-              onChange={setSearch}
+              onChange={(value) => {
+                setSearch(value);
+                setPage(1);
+              }}
               placeholder="Search entrepreneur..."
               className="w-70 max-lg:w-full"
             />
@@ -92,7 +108,7 @@ export default function Categories() {
               "Created",
               "Actions",
             ]}
-            data={users}
+            data={categories}
             colSpan={6}
             isFetching={isFetching}
             renderRow={(item) => (
@@ -107,6 +123,11 @@ export default function Categories() {
                 }}
               />
             )}
+          />
+          <Pagination
+            page={data?.page ?? 1}
+            totalPages={data?.totalPages ?? 1}
+            onPageChange={setPage}
           />
         </>
       )}

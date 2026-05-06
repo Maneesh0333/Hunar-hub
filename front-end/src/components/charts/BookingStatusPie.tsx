@@ -32,13 +32,13 @@ export default function BookingStatusPie({ data, total }: Props) {
   const displayLabel = activeItem ? activeItem.name : "Total Bookings";
 
   return (
-    <div className="relative flex-1 h-96 bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-8">
+    <div className="relative flex-1 min-h-96 bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-8">
       <h2 className="font-semibold mb-1">Bookings Status</h2>
       <p className="text-xs text-[var(--earth-light)] mb-3">
         This month · {total} total
       </p>
 
-      <ResponsiveContainer width="100%" height="80%">
+      <ResponsiveContainer width="100%" height="80%"  minHeight={300}>
         <PieChart>
           <Pie
             data={data}

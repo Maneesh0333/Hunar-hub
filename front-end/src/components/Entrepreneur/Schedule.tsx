@@ -8,14 +8,24 @@ import {
   type Schedule,
 } from "../../hooks/Entrepreneur/useSchedule";
 import ScheduleForm from "../forms/ScheduleForm";
+import NoInternet from "../../pages/NoInternet";
+import ErrorState from "../../pages/ErrorState";
+import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
 
 export default function Schedule() {
   const [open, setOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
     null,
   );
+  const isOnline = useNetworkStatus();
 
-  const { data: schedule = [], isLoading, isError } = useSchedules();
+  const {
+    data: schedule = [],
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useSchedules();
 
   // Open form to edit a schedule
   const handleEdit = (item: Schedule) => {
@@ -23,14 +33,22 @@ export default function Schedule() {
     setOpen(true);
   };
 
-  if (isLoading) {
-    return <Spinner />;
+  if (!isOnline) {
+    return <NoInternet />;
   }
 
-  if (isError) return <p>Error loading Schedule</p>;
+  if (isError) {
+    return (
+      <ErrorState
+        message="Failed to load schedule"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
+    );
+  }
 
   return (
-    <div className="flex flex-col flex-1 p-6 bg-[var(--cream)] rounded-xl space-y-6 text-[var(--earth)]">
+    <div className="flex flex-col flex-1 bg-[var(--cream)] rounded-xl space-y-6 text-[var(--earth)]">
       {/* Header */}
       <Header
         title="My Schedule"
@@ -45,45 +63,54 @@ export default function Schedule() {
           />
         }
       />
-
-      {schedule.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-sm">
-          You haven't added your working hours yet.
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-5">
-          {schedule.map((item) => (
-            <div
-              key={item.day}
-              className="bg-[var(--white)] border border-[var(--border-1)] rounded-xl p-5 flex flex-col gap-4 cursor-pointer"
-              onClick={() => handleEdit(item)}
-            >
-              <div className="flex justify-between items-center">
-                <h2 className="font-semibold">{item.day}</h2>
-                <span
-                  className={`text-xs px-3 py-1 rounded-full ${
-                    item.working
-                      ? "bg-green-100 text-green-500"
-                      : "bg-gray-200 text-gray-500"
-                  }`}
-                >
-                  {item.working ? "Working" : "Off"}
-                </span>
-              </div>
-
-              {item.working && (
-                <div className="flex gap-10 text-sm">
-                  <div>
-                    <p className="text-xs text-[var(--earth-light)]">Hours</p>
-                    <p className="font-semibold">
-                      {item.start} – {item.end}
-                    </p>
-                  </div>
-                </div>
-              )}
+        <>
+          {schedule.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-sm">
+              You haven't added your working hours yet.
             </div>
-          ))}
-        </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-5">
+              {schedule.map((item) => (
+                <div
+                  key={item.day}
+                  className="bg-[var(--white)] border border-[var(--border-1)] rounded-xl p-5 flex flex-col gap-4 cursor-pointer"
+                  onClick={() => handleEdit(item)}
+                >
+                  <div className="flex justify-between items-center">
+                    <h2 className="font-semibold">{item.day}</h2>
+                    <span
+                      className={`text-xs px-3 py-1 rounded-full ${
+                        item.working
+                          ? "bg-green-100 text-green-500"
+                          : "bg-gray-200 text-gray-500"
+                      }`}
+                    >
+                      {item.working ? "Working" : "Off"}
+                    </span>
+                  </div>
+
+                  {item.working && (
+                    <div className="flex gap-10 text-sm">
+                      <div>
+                        <p className="text-xs text-[var(--earth-light)]">
+                          Hours
+                        </p>
+                        <p className="font-semibold">
+                          {item.start} – {item.end}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* SideSheet Form */}

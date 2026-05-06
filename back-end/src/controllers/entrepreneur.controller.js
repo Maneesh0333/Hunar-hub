@@ -19,7 +19,7 @@ export const getEntrepreneurProfile = asyncHandler(async (req, res) => {
     .populate([
       {
         path: "user",
-        select: "name phone email",
+        select: "name phone email city",
       },
       {
         path: "category",
@@ -42,15 +42,11 @@ export const getEntrepreneurProfile = asyncHandler(async (req, res) => {
 export const getEntrepreneurProfileById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new AppError("Invalid ID", 400);
-  }
-
   const entrepreneur = await Entrepreneur.findOne({ user: id })
     .populate([
       {
         path: "user",
-        select: "name phone email",
+        select: "name phone email city",
       },
       {
         path: "category",
@@ -125,7 +121,7 @@ export const updateEntrepreneurProfile = asyncHandler(async (req, res) => {
     const entrepreneur = await Entrepreneur.findOneAndUpdate(
       { user: id },
       { $set: entrepreneurUpdates },
-      { new: true, runValidators: true, session },
+      { returnDocument: "after", runValidators: true, session },
     );
 
     if (!entrepreneur)
@@ -364,7 +360,6 @@ export const getSearchEntrepreneurProfile = asyncHandler(async (req, res) => {
     match["category._id"] = new mongoose.Types.ObjectId(category);
   }
 
-  
   if (availableToday !== "false") {
     match.isAvailableToday = true;
   }
@@ -527,7 +522,8 @@ export const getSearchEntrepreneurProfile = asyncHandler(async (req, res) => {
               totalReviews: "$rating.totalReviews",
               minPrice: 1,
               priceUnit: 1,
-              isAvailableToday: 1
+              isAvailableToday: 1,
+              verificationStatus: 1,
             },
           },
         ],
@@ -538,10 +534,20 @@ export const getSearchEntrepreneurProfile = asyncHandler(async (req, res) => {
   ];
 
   const result = await Entrepreneur.aggregate(pipeline);
+  const total = result[0]?.totalFiltered?.[0]?.count || 0;
+  const entrepreneurResult = result[0].entrepreneurs || {};
 
   res.status(200).json({
     success: true,
-    data: result[0],
+    message: "Search entrepreneurs fetched",
+    data: { entrepreneurs: entrepreneurResult },
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+      hasNextPage: pageNum * limitNum < total,
+    },
   });
 });
 
@@ -549,14 +555,13 @@ export const createReview = asyncHandler(async (req, res) => {
   const { bookingId, rating, comment } = req.body;
 
   /* ---------------- Validate ---------------- */
-
   if (!rating || rating < 1 || rating > 5) {
     throw new AppError("Rating must be between 1 and 5", 400);
   }
 
   const booking = await Booking.findById(bookingId);
 
-    if (!booking) {
+  if (!booking) {
     throw new AppError("booking not found", 404);
   }
 
@@ -615,61 +620,6 @@ export const createReview = asyncHandler(async (req, res) => {
     success: true,
     message: "Review submitted successfully",
     data: review,
-  });
-});
-
-// not used
-export const getReviewStats = asyncHandler(async (req, res) => {
-  const { entrepreneurId } = req.params;
-
-  const stats = await Review.aggregate([
-    { $match: { entrepreneur: new mongoose.Types.ObjectId(entrepreneurId) } },
-
-    {
-      $facet: {
-        ratings: [
-          {
-            $group: {
-              _id: "$rating",
-              count: { $sum: 1 },
-            },
-          },
-        ],
-
-        overall: [
-          {
-            $group: {
-              _id: null,
-              average: { $avg: "$rating" },
-              total: { $sum: 1 },
-            },
-          },
-        ],
-      },
-    },
-  ]);
-
-  const ratingCounts = {
-    5: 0,
-    4: 0,
-    3: 0,
-    2: 0,
-    1: 0,
-  };
-
-  stats[0].ratings.forEach((r) => {
-    ratingCounts[r._id] = r.count;
-  });
-
-  const overall = stats[0].overall[0] || { average: 0, total: 0 };
-
-  res.status(200).json({
-    success: true,
-    data: {
-      average: Number(overall.average.toFixed(1)),
-      totalReviews: overall.total,
-      distribution: ratingCounts,
-    },
   });
 });
 

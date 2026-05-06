@@ -35,26 +35,10 @@ const serviceSchema = new mongoose.Schema(
       default: "per_service",
     },
 
-    deliveryTime: {
-      type: String,
-      trim: true,
-    },
-
     isActive: {
       type: Boolean,
       default: true,
       index: true,
-    },
-    ratingsAverage: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
-    },
-
-    ratingsQuantity: {
-      type: Number,
-      default: 0,
     },
   },
   { timestamps: true },
@@ -64,7 +48,6 @@ serviceSchema.index({ entrepreneur: 1, title: 1 }, { unique: true });
 
 serviceSchema.index({
   title: "text",
-  description: "text",
 });
 
 serviceSchema.set("toJSON", {
@@ -76,5 +59,4 @@ serviceSchema.set("toJSON", {
 });
 
 const Service = mongoose.model("Service", serviceSchema);
-
 export default Service;

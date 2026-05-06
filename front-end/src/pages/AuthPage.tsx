@@ -3,13 +3,34 @@ import Login from "../components/Auth/Login";
 import Register from "../components/Auth/Register";
 import Verify from "../components/Auth/Verify";
 import Stepper, { type Step } from "../components/Auth/Stepper";
+import { useAuthStore } from "../stores/authStore";
+import { Link, Navigate, useLocation } from "react-router-dom";
 
 const steps: Step[] = ["Details", "Verify", "Done"];
 
 export default function AuthPage() {
-  const [tab, setTab] = useState("login");
+  const location = useLocation();
+  const data = location.state;
+
+  const [tab, setTab] = useState(data?.page || "login");
+  const [role] = useState(data?.role || "User");
   const [currentStep, setCurrentStep] = useState<Step>("Details");
   const [email, setEmail] = useState("");
+
+  const user = useAuthStore((state) => state.user);
+
+  if (user) {
+    switch (user?.role) {
+      case "Admin":
+        return <Navigate to="/admin" replace />;
+      case "Entrepreneur":
+        return <Navigate to="/entrepreneur" replace />;
+      case "User":
+        return <Navigate to="/home" replace />;
+      default:
+        return;
+    }
+  }
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 font-sans">
@@ -44,12 +65,15 @@ export default function AuthPage() {
       </div>
 
       {/* RIGHT – Auth Form */}
-      <div className="flex flex-col justify-center p-15 bg-[#FAF5ED]">
+      <div className="flex flex-col justify-center p-15 max-md:p-10 bg-[#FAF5ED]">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
-          <h2 className="font-playfair text-2xl font-black text-[var(--clay)]">
+          <Link
+            to="/home"
+            className="font-playfair text-2xl font-black text-[var(--clay)]"
+          >
             Hunar<span className="text-[var(--ink)]">Hub</span>
-          </h2>
+          </Link>
         </div>
 
         {/* Tabs */}
@@ -57,8 +81,11 @@ export default function AuthPage() {
           {["login", "signup"].map((item) => (
             <button
               key={item}
-              onClick={() => setTab(item)}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition
+              onClick={() => {
+                setTab(item);
+                setCurrentStep("Details");
+              }}
+              className={`flex-1 cursor-pointer py-2 text-sm font-semibold rounded-lg transition
                 ${
                   tab === item
                     ? "bg-[#FAF5ED] text-[var(--clay)]"
@@ -79,14 +106,53 @@ export default function AuthPage() {
             </div>
 
             {currentStep === "Details" && (
-              <Register setCurrentStep={setCurrentStep} setEmail={setEmail} />
+              <Register
+                setCurrentStep={setCurrentStep}
+                setEmail={setEmail}
+                role={role}
+              />
             )}
 
             {currentStep === "Verify" && (
               <Verify setCurrentStep={setCurrentStep} email={email} />
             )}
 
-            {currentStep === "Done" && <h1>Done</h1>}
+            {currentStep === "Done" && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-playfair text-3xl font-black mb-2">
+                    🎉 You're all set!
+                  </h3>
+                  <p className="text-sm text-[var(--earth-mid)]">
+                    Your account has been successfully created and verified.
+                  </p>
+                </div>
+
+                <div className="bg-white border border-[rgba(196,99,42,0.15)] rounded-xl p-4 text-sm text-[var(--earth)]">
+                  {role === "Entrepreneur" ? (
+                    <>
+                      You can now set up your profile, add services, and start
+                      receiving bookings from customers near you.
+                    </>
+                  ) : (
+                    <>
+                      You can now explore local artisans and book services
+                      tailored to your needs.
+                    </>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setTab("login");
+                    setCurrentStep("Details");
+                  }}
+                  className="w-full py-3 rounded-xl cursor-pointer bg-[var(--clay)] text-white font-semibold hover:opacity-90 transition"
+                >
+                  Continue to Sign In →
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

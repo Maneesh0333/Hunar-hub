@@ -1,11 +1,14 @@
-import type { UseMutationResult } from "@tanstack/react-query";
-import type { User } from "../../hooks/Admin/useUsers";
+import type {
+  useBlockUsers,
+  User,
+  useUnblockUsers,
+} from "../../hooks/Admin/useUsers";
 import { ActionButton } from "../Shared/ActionButton";
 
 type Props = {
   item: User;
-  blockMutation: UseMutationResult<any, Error, string>;
-  unblockMutation: UseMutationResult<any, Error, string>;
+  blockMutation: ReturnType<typeof useBlockUsers>;
+  unblockMutation: ReturnType<typeof useUnblockUsers>;
 };
 
 export default function UserRow({

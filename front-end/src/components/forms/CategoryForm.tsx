@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
-import * as yup from "yup";
 import InputField from "../Shared/InputField";
 import SelectInput from "../Shared/SelectInput";
 import Button from "../Shared/Button";
@@ -10,81 +9,9 @@ import {
   type Category,
 } from "../../hooks/Admin/useCategories";
 import { useEffect } from "react";
+import { createCategorySchema, updateCategorySchema } from "../../schema/admin/category.schema";
+import type { CategoryFormType } from "../../types/admin/types";
 
-export const createCategorySchema = yup.object({
-  name: yup
-    .string()
-    .trim()
-    .required("Category name is required")
-    .min(2, "Category name must be at least 2 characters")
-    .max(30, "Category name cannot exceed 30 characters"),
-
-  icon: yup
-    .string()
-    .trim()
-    .required("Icon is required")
-    // Use a custom test to count actual visual emojis
-    .test("is-single-emoji", "Please add exactly one icon", (val) => {
-      if (!val) return false;
-      // This splits the string by visual characters (graphemes)
-      const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
-      const count = [...segmenter.segment(val)].length;
-      return count === 1;
-    }),
-
-  description: yup
-    .string()
-    .trim()
-    .max(100, "Description cannot exceed 100 characters")
-    .optional()
-    .default(""),
-
-  status: yup
-    .mixed<"Active" | "Inactive">()
-    .oneOf(["Active", "Inactive"])
-    .required()
-    .default("Active"),
-});
-
-export const updateCategorySchema = yup.object({
-  name: yup
-    .string()
-    .trim()
-    .min(2, "Category name must be at least 2 characters")
-    .max(30, "Category name cannot exceed 30 characters"),
-
-  icon: yup
-    .string()
-    .trim()
-    // Use a custom test to count actual visual emojis
-    .test("is-single-emoji", "Please add exactly one icon", (val) => {
-      if (!val) return false;
-      // This splits the string by visual characters (graphemes)
-      const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
-      const count = [...segmenter.segment(val)].length;
-      return count === 1;
-    }),
-    
-  description: yup
-    .string()
-    .trim()
-    .max(100, "Description cannot exceed 100 characters")
-    .default(""),
-
-  status: yup
-    .mixed<"Active" | "Inactive">()
-    .oneOf(["Active", "Inactive"])
-    .default("Active"),
-});
-
-export type CreateCategorySchemaType = yup.InferType<
-  typeof createCategorySchema
->;
-export type UpdateCategorySchemaType = yup.InferType<
-  typeof updateCategorySchema
->;
-
-export type FormType = CreateCategorySchemaType | UpdateCategorySchemaType;
 
 type Props = {
   category?: Category | null;
@@ -93,7 +20,7 @@ type Props = {
 
 export default function CategoryForm({ category, closeSheet }: Props) {
   const createMutation = useCreateCategories();
-  const updateMudation = useUpdateCategories();
+  const updateMutation = useUpdateCategories();
 
   const {
     handleSubmit,
@@ -107,6 +34,7 @@ export default function CategoryForm({ category, closeSheet }: Props) {
     ),
     mode: "onChange",
     defaultValues: {
+      icon: "",
       name: "",
       description: "",
       status: "Active",
@@ -116,12 +44,14 @@ export default function CategoryForm({ category, closeSheet }: Props) {
   useEffect(() => {
     if (category) {
       reset({
+        icon: category.icon,
         name: category.name,
         description: category.description,
         status: category.status,
       });
     } else {
       reset({
+        icon: "",
         name: "",
         description: "",
         status: "Active",
@@ -129,15 +59,15 @@ export default function CategoryForm({ category, closeSheet }: Props) {
     }
   }, [category, reset]);
 
-  const onSubmit = (data: FormType) => {
+  const onSubmit = (data: CategoryFormType) => {
     if (category) {
+      const dirtyKeys = new Set(Object.keys(dirtyFields));
+
       const dataMod = Object.fromEntries(
-        Object.entries(data).filter(([key]) =>
-          Object.keys(dirtyFields).includes(key),
-        ),
+        Object.entries(data).filter(([key]) => dirtyKeys.has(key)),
       );
 
-      updateMudation.mutate(
+      updateMutation.mutate(
         { dataMod, categoryId: category._id },
         {
           onSuccess: () => {
@@ -211,9 +141,13 @@ export default function CategoryForm({ category, closeSheet }: Props) {
         type="submit"
         label={category ? "Update Category" : "Save Category"}
         className="w-full"
-        disabled={!isValid || !isDirty || category ? updateMudation.isPending : createMutation.isPending}
+        disabled={
+          !isValid ||
+          !isDirty ||
+          (category ? updateMutation.isPending : createMutation.isPending)
+        }
         isLoading={
-          category ? updateMudation.isPending : createMutation.isPending
+          category ? updateMutation.isPending : createMutation.isPending
         }
       />
     </form>

@@ -8,7 +8,6 @@ import {
   getEntrepreneurProfileById,
   getProfileCompletenessStats,
   getReviews,
-  getReviewStats,
   getSchedule,
   getSearchEntrepreneurProfile,
   saveAvailability,
@@ -19,19 +18,19 @@ import { isAuthenticated, restrictTo } from "../middleware/auth.middleware.js";
 import { updateEntrepreneurProfileSchema } from "../validations/entrepreneur.validation.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { createScheduleSchema, updateScheduleSchema } from "../validations/schedule.validation.js";
+import { validateObjectId } from "../middleware/validateObjectId.middleware.js";
+import { reviewSchema } from "../validations/review.validation.js";
 
 const router = express.Router();
 
 // Public
 router.get("/search/profile", getSearchEntrepreneurProfile);
-router.get("/public/profile/:id", getEntrepreneurProfileById);
-
-router.get("/reviews/:id", getReviews);
-router.get("/stats/:id", getReviewStats);
+router.get("/public/profile/:id", validateObjectId, getEntrepreneurProfileById);
+router.get("/reviews/:id", validateObjectId, getReviews);
 
 
 router.use(isAuthenticated);
-router.post("/review", restrictTo("User"), createReview);
+router.post("/review", restrictTo("User"), validate(reviewSchema), createReview);
 
 
 router.use(restrictTo("Entrepreneur"));
@@ -44,7 +43,7 @@ router.get("/profile/completeness", getProfileCompletenessStats);
 
 router.get("/me/schedule", getSchedule);
 router.post("/me/schedule", validate(createScheduleSchema), createSchedule);
-router.patch("/me/schedule/:id", validate(updateScheduleSchema), updateSchedule);
+router.patch("/me/schedule/:id", validate(updateScheduleSchema), validateObjectId, updateSchedule);
 
 router.get("/me/availability", getAvailability);
 router.post("/me/availability", saveAvailability);

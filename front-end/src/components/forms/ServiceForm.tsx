@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
-import * as yup from "yup";
 import { useEffect } from "react";
 
 import InputField from "../Shared/InputField";
@@ -12,69 +11,9 @@ import {
   useUpdateServices,
   type Service,
 } from "../../hooks/Entrepreneur/useServices";
+import { createServiceSchema, updateServiceSchema } from "../../schema/admin/service.schema";
+import type { ServiceFormType } from "../../types/admin/types";
 
-export const createServiceSchema = yup.object({
-  title: yup
-    .string()
-    .trim()
-    .required("Service name is required")
-    .min(2, "Service name must be at least 2 characters")
-    .max(100, "Service name cannot exceed 100 characters"),
-
-  description: yup
-    .string()
-    .trim()
-    .required("Description is required")
-    .max(1000, "Description cannot exceed 1000 characters"),
-
-  price: yup
-    .number()
-    .transform((value, currentValue) =>
-      currentValue === "" ? undefined : value,
-    )
-    .required("Price is required")
-    .min(0, "Price cannot be negative"),
-
-  priceUnit: yup
-    .string()
-    .oneOf(["per_piece", "per_hour", "per_service"])
-    .required("Price unit is required"),
-
-  deliveryTime: yup
-    .string()
-    .trim()
-    .max(50, "Delivery time is too long")
-    .optional(),
-});
-
-export const updateServiceSchema = yup.object({
-  title: yup
-    .string()
-    .trim()
-    .min(2, "Service name must be at least 2 characters")
-    .max(100, "Service name cannot exceed 100 characters"),
-
-  description: yup
-    .string()
-    .trim()
-    .max(1000, "Description cannot exceed 1000 characters"),
-
-  price: yup
-    .number()
-    .transform((value, currentValue) =>
-      currentValue === "" ? undefined : value,
-    )
-    .min(0, "Price cannot be negative"),
-
-  priceUnit: yup.string().oneOf(["per_piece", "per_hour", "per_service"]),
-
-  deliveryTime: yup.string().trim().max(50, "Delivery time is too long"),
-});
-
-export type CreateServiceSchemaType = yup.InferType<typeof createServiceSchema>;
-export type UpdateServiceSchemaType = yup.InferType<typeof updateServiceSchema>;
-
-export type FormType = CreateServiceSchemaType | UpdateServiceSchemaType;
 
 type Props = {
   service?: Service | null;
@@ -99,7 +38,6 @@ export default function ServiceForm({ service, closeSheet }: Props) {
       description: "",
       price: 0,
       priceUnit: "per_service",
-      deliveryTime: "",
     },
   });
 
@@ -110,7 +48,6 @@ export default function ServiceForm({ service, closeSheet }: Props) {
         description: service.description,
         price: service.price,
         priceUnit: service.priceUnit,
-        deliveryTime: service.deliveryTime,
       });
     } else {
       reset({
@@ -118,12 +55,11 @@ export default function ServiceForm({ service, closeSheet }: Props) {
         description: "",
         price: 0,
         priceUnit: "per_service",
-        deliveryTime: "",
       });
     }
   }, [service, reset]);
 
-  const onSubmit = (data: FormType) => {
+  const onSubmit = (data: ServiceFormType) => {
     if (service) {
       const dataMod = Object.fromEntries(
         Object.entries(data).filter(([key]) =>
@@ -208,9 +144,9 @@ export default function ServiceForm({ service, closeSheet }: Props) {
         label={service ? "Update Service" : "Save Service"}
         className="w-full"
         disabled={
-          !isValid || !isDirty || service
-            ? updateMutation.isPending
-            : createMutation.isPending
+          !isValid ||
+          !isDirty ||
+          (service ? updateMutation.isPending : createMutation.isPending)
         }
         isLoading={
           service ? updateMutation.isPending : createMutation.isPending

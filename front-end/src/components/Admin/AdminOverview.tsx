@@ -1,46 +1,44 @@
 import { useAdminDashboard } from "../../hooks/Admin/useAdminDashboard";
+import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
+import ErrorState from "../../pages/ErrorState";
+import NoInternet from "../../pages/NoInternet";
+import type { QuickAction } from "../../types/shared/types";
 import AdminGrowthChart from "../charts/AdminGrowthChart";
 import QuickActions from "../QuickActions";
 import Header from "../Shared/Header";
 import Spinner from "../Shared/Spinner";
 import StatsGrid from "../StatsGrid";
 
-export type QuickAction = {
-  icon: string;
-  title: string;
-  description: string;
-  path: string;
-};
-
 const adminActions: QuickAction[] = [
   {
     icon: "✅",
-    title: "Approve Users",
-    description: "18 pending",
+    title: "Approve Entrepreneurs",
+    description: "Review and approve entrepreneurs",
     path: "/admin/approvals",
   },
   {
     icon: "🚨",
-    title: "Handle Complaints",
-    description: "23 open",
+    title: "Complaints",
+    description: "View and resolve complaints",
     path: "/admin/complaints",
   },
   {
     icon: "📊",
-    title: "View Analytics",
-    description: "Revenue & growth",
-    path: "/admin/analytics",
+    title: "Bookings",
+    description: "View all bookings",
+    path: "/admin/bookings",
   },
   {
     icon: "🏷️",
-    title: "Handle Categories",
-    description: "Add new categories",
+    title: "Categories",
+    description: "Manage categories",
     path: "/admin/categories",
   },
 ];
 
 export default function AdminOverview() {
-  const { data, isLoading, isError } = useAdminDashboard();
+  const { data, isLoading, isError, refetch, isFetching } = useAdminDashboard();
+  const isOnline = useNetworkStatus();
 
   const statsData = [
     {
@@ -73,26 +71,40 @@ export default function AdminOverview() {
     },
   ];
 
-  if (isLoading) return <Spinner />;
-  if (isError) return <p>Error loading dashboard</p>;
+  if (!isOnline) {
+    return <NoInternet />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        message="Failed to load stats"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
+    );
+  }
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
+    <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
       {/* HEADER */}
       <Header
         title="Admin Dashboard"
         description="Monitor platform activity and system health"
-        children={
-          <button className="px-4 py-2 rounded-lg bg-[#C4632A] text-white text-sm font-semibold">
-            Generate Report
-          </button>
-        }
       />
-      {/* STATS */}
-      <StatsGrid statsData={statsData} />
-      {/* PLATFORM ACTIVITY */}
-      <AdminGrowthChart growth={data?.charts?.growth}/>
-      {/* Quick Actions */}
-      <QuickActions actions={adminActions} />;
+
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-5">
+          <StatsGrid statsData={statsData} />
+          {/* PLATFORM ACTIVITY */}
+          <AdminGrowthChart growth={data?.charts?.growth} />
+          {/* Quick Actions */}
+          <QuickActions actions={adminActions} />
+        </div>
+      )}
     </div>
   );
 }

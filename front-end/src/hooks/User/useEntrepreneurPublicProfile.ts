@@ -14,11 +14,11 @@ export type EntrepreneurProfile = {
     name: string;
     email: string;
     phone: string;
+    city: string;
   };
 
   bio: string;
   about: string;
-  city: string;
   visitType: string[];
   skills: string[];
   payment: string[];

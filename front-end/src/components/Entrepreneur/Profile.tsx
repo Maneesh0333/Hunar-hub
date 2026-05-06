@@ -9,36 +9,67 @@ import SideSheet from "../Shared/SideSheet";
 import { useState } from "react";
 import EntrepreneurProfileForm from "../forms/EntrepreneurProfileForm";
 import Spinner from "../Shared/Spinner";
+import ErrorState from "../../pages/ErrorState";
+import NoInternet from "../../pages/NoInternet";
+import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
 
 function Profile() {
   const [open, setOpen] = useState(false);
-  const { data: profileData, isLoading, isError, error } = useProfile();
+  const {
+    data: profileData,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useProfile();
+  
+  const isOnline = useNetworkStatus();
 
-  if (isLoading) return <Spinner />;
-  if (isError) return <div>{error.message}</div>;
+  if (!isOnline) {
+    return <NoInternet />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        message="Failed to load profile"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
+    );
+  }
+
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-[#FAF5ED] text-[#2C1A0E]">
+    <div className="flex-1 flex flex-col space-y-3 bg-[#FAF5ED] text-[#2C1A0E]">
       <Header
         title="My Profile"
         description="Manage your profile information"
       />
 
-      <div className="rounded-2xl border border-[rgba(196,99,42,0.12)] overflow-hidden">
-        <ProfileHeader
-          page="Entrepreneur"
-          data={profileData}
-          onEdit={() => setOpen(true)}
-        />
-      </div>
-      <About data={profileData} />
-
-      <div className="flex flex-col lg:flex-row gap-5">
-        <BasicInformationCard data={profileData} />
-        <div className="flex-1 space-y-5">
-          <ProfileCompletenessCard />
-          <AchievementsCard />
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Spinner />
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col  gap-5">
+          <div className="rounded-2xl border border-[rgba(196,99,42,0.12)] overflow-hidden">
+            <ProfileHeader
+              page="Entrepreneur"
+              data={profileData}
+              onEdit={() => setOpen(true)}
+            />
+          </div>
+          <About data={profileData} />
+
+          <div className="flex flex-col lg:flex-row gap-5">
+            <BasicInformationCard data={profileData} />
+            <div className="flex-1 space-y-5">
+              <ProfileCompletenessCard />
+              <AchievementsCard />
+            </div>
+          </div>
+        </div>
+      )}
 
       <SideSheet
         title="Edit Profile"

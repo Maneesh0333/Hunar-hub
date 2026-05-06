@@ -2,10 +2,9 @@ import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import { asyncHandler } from "../middleware/async.middleware.js";
 import AppError from "../utils/AppError.js";
+import mongoose from "mongoose";
 
-/* ---------------- CREATE / GET CONVERSATION ---------------- */
-
-export const getOrCreateConversation = asyncHandler(async (req, res) => {
+export const createConversation = asyncHandler(async (req, res) => {
   const senderId = req.user.id;
   const { receiverId } = req.body;
 
@@ -13,10 +12,16 @@ export const getOrCreateConversation = asyncHandler(async (req, res) => {
     throw new AppError("Receiver required", 400);
   }
 
+  if (senderId === receiverId) {
+    throw new AppError("Cannot chat with yourself", 400);
+  }
+
+  /* ---------- CREATE UNIQUE KEY ---------- */
   const participants = [senderId, receiverId].sort();
   const participantsKey = participants.join("_");
 
-  const conversation = await Conversation.findOneAndUpdate(
+  /* ---------- ATOMIC OPERATION ---------- */
+  await Conversation.findOneAndUpdate(
     { participantsKey },
     {
       $setOnInsert: {
@@ -25,32 +30,106 @@ export const getOrCreateConversation = asyncHandler(async (req, res) => {
       },
     },
     {
+      new: true,
       upsert: true,
-      returnDocument: "after",
     },
-  );
+  ).populate("participants", "name");
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
-    message: "get Create Conversation",
-    data: conversation,
+    message: "Conversation fetched/created",
   });
 });
 
-/* ---------------- GET USER CONVERSATIONS ---------------- */
-
 export const getUserConversations = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
+  const { search = "", page = 1, limit = 10 } = req.query;
 
-  const conversations = await Conversation.find({
-    participants: { $in: [userId] },
-  })
-    .populate("participants", "name")
-    .sort({ updatedAt: -1 });
+  const pageNum = Math.max(parseInt(page), 1);
+  const limitNum = Math.min(Math.max(parseInt(limit), 1), 20);
+  const skip = (pageNum - 1) * limitNum;
+
+  const userId = new mongoose.Types.ObjectId(req.user.id);
+
+  const aggregation = await Conversation.aggregate([
+    // 1. Match conversations where user is a participant
+    {
+      $match: {
+        participants: userId,
+      },
+    },
+
+    // 2. Lookup only required user fields
+    {
+      $lookup: {
+        from: "users",
+        let: { participantIds: "$participants" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $in: ["$_id", "$$participantIds"] },
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+            },
+          },
+        ],
+        as: "participants",
+      },
+    },
+
+    // 3. Apply search (if provided)
+    ...(search
+      ? [
+          {
+            $match: {
+              "participants.name": {
+                $regex: search,
+                $options: "i",
+              },
+            },
+          },
+        ]
+      : []),
+
+    // 4. Split into data + metadata
+    {
+      $facet: {
+        data: [
+          { $sort: { updatedAt: -1 } },
+          { $skip: skip },
+          { $limit: limitNum },
+          {
+            $project: {
+              _id: 1,
+              participants: 1,
+              lastMessage: 1,
+              createdAt: 1,
+              updatedAt: 1,
+            },
+          },
+        ],
+        metadata: [{ $count: "total" }],
+      },
+    },
+  ]);
+
+  const conversations = aggregation[0]?.data || [];
+  const total = aggregation[0]?.metadata[0]?.total || 0;
 
   res.status(200).json({
     success: true,
+    message: "Conversations fetched",
     data: conversations,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+      hasNextPage: pageNum * limitNum < total,
+    },
   });
 });
 
@@ -111,5 +190,6 @@ export const markAsRead = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
+    message: "marked as read",
   });
 });

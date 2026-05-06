@@ -2,10 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import type { AxiosError } from "axios";
 import axiosApi from "../../lib/axios";
-import type {
-  FormType,
-  UpdateScheduleSchemaType,
-} from "../../components/forms/ScheduleForm";
+import type { UpdateScheduleSchemaType } from "../../schema/entrepreneur/schedule.schema";
+import type { FormType } from "../../types/entrepreneur/types";
+
 
 export type Schedule = {
   _id: string;

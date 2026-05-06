@@ -1,36 +1,18 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useForm } from "react-hook-form";
-import * as yup from "yup";
+import { useForm, useWatch } from "react-hook-form";
 import { useEffect, useState } from "react";
-
 import InputField from "../Shared/InputField";
 import Button from "../Shared/Button";
 import { useCreateReview } from "../../hooks/User/useReviews";
+import type { ReviewFormType } from "../../types/user/types";
+import { reviewSchema } from "../../schema/user/review.schema";
 
-/* ---------------- SCHEMA ---------------- */
-export const reviewSchema = yup.object({
-  rating: yup
-    .number()
-    .required("Please select a rating")
-    .min(1, "Minimum 1 star")
-    .max(5, "Maximum 5 stars"),
-
-  comment: yup
-    .string()
-    .trim()
-    .max(300, "Comment cannot exceed 300 characters")
-    .optional()
-    .default(""),
-});
-
-export type ReviewFormType = yup.InferType<typeof reviewSchema>;
 
 type Props = {
   bookingId: string;
   closeSheet: () => void;
 };
 
-/* ---------------- COMPONENT ---------------- */
 export default function ReviewForm({ bookingId, closeSheet }: Props) {
   const createReview = useCreateReview();
   const [hover, setHover] = useState(0);
@@ -39,9 +21,9 @@ export default function ReviewForm({ bookingId, closeSheet }: Props) {
     handleSubmit,
     setValue,
     register,
-    watch,
+    control,
     reset,
-    formState: { errors, isValid, isSubmitting },
+    formState: { errors, isValid },
   } = useForm<ReviewFormType>({
     resolver: yupResolver(reviewSchema),
     mode: "onChange",
@@ -51,9 +33,8 @@ export default function ReviewForm({ bookingId, closeSheet }: Props) {
     },
   });
 
-  const rating = watch("rating");
+  const rating = useWatch({ control, name: "rating" });
 
-  /* ---------------- RESET ---------------- */
   useEffect(() => {
     reset({
       rating: undefined,
@@ -63,12 +44,6 @@ export default function ReviewForm({ bookingId, closeSheet }: Props) {
 
   /* ---------------- SUBMIT ---------------- */
   const onSubmit = (data: ReviewFormType) => {
-
-    console.log({
-        bookingId,
-        rating: data.rating,
-        comment: data.comment,
-      }, "_____")
     createReview.mutate(
       {
         bookingId,

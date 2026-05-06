@@ -1,77 +1,31 @@
+import { Link } from "react-router-dom";
+import { useSearchEntrepreneurs } from "../hooks/User/useSearchEntrepreneurs";
 import ArtisanCard from "./ArtisanCard";
-
-export type Artisan = {
-  name: string;
-  skill: string;
-  tags: string[];   
-  location: string;
-  avatar: string;      
-  badge: string;        
-  rating: number;       
-  reviews: number;
-  price: string;        
-  unit: string;         
-  gradient: string;     
-};
-
-export const artisans: Artisan[] = [
-  {
-    name: "Rashida Begum",
-    skill: "Master Tailor",
-    tags: ["Bridal wear", "Alteration", "Suits"],
-    location: "Lucknow, UP",
-    avatar: "🧵",
-    badge: "✅ Verified",
-    rating: 4.9,
-    reviews: 138,
-    price: "₹299",
-    unit: "hr",
-    gradient: "from-[var(--clay)] to-[var(--clay-light)]",
-  },
-  {
-    name: "Ramesh Prajapati",
-    skill: "Traditional Potter",
-    tags: ["Custom Pots", "Decor Items", "Clay Repair"],
-    location: "Jaipur, Rajasthan",
-    avatar: "🏺",
-    badge: "⭐ Top Pick",
-    rating: 4.8,
-    reviews: 94,
-    price: "₹450",
-    unit: "order",
-    gradient: "from-[#2C5F6E] to-[#4A9BAE]",
-  },
-  {
-    name: "Mohammed Iqbal",
-    skill: "Cobbler & Leather Work",
-    tags: ["Shoe Repair", "Polishing", "Custom Fit"],
-    location: "Agra, UP",
-    avatar: "👟",
-    badge: "✅ Verified",
-    rating: 4.7,
-    reviews: 62,
-    price: "₹199",
-    unit: "visit",
-    gradient: "from-[#5C4033] to-[#8B6B5A]",
-  },
-  {
-    name: "Anita Devi",
-    skill: "Handloom Weaver",
-    tags: ["Sarees", "Dupattas", "Custom Weave"],
-    location: "Varanasi, UP",
-    avatar: "🪢",
-    badge: "🌟 New",
-    rating: 5.0,
-    reviews: 18,
-    price: "₹649",
-    unit: "saree",
-    gradient: "from-[#3A5C3E] to-[#6B9E70]",
-  },
-];
+import Spinner from "./Shared/Spinner";
 
 export default function FeaturedArtisans() {
+  const { data, isLoading } = useSearchEntrepreneurs(
+    "",
+    "All",
+    "Any",
+    false,
+    false,
+    3,
+  );
+
+  const entrepreneurs =
+    data?.pages.flatMap((page) => page.data.entrepreneurs) || [];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-60 flex items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
   return (
-    <section className="px-6 md:px-16 py-20 bg-[var(--cream)]">
+    <section className="px-16 max-md:px-6 py-10 bg-[var(--cream)]">
       {/* Header */}
       <div className="flex items-end justify-between mb-12">
         <div>
@@ -83,21 +37,21 @@ export default function FeaturedArtisans() {
           </h2>
         </div>
 
-        <a
-          href="#"
+        <Link
+          to="/search"
           className="inline-flex items-center gap-2 text-sm font-semibold
-                     border border-[var(--clay)]/40
+                     border border-[var(--clay)]/40 whitespace-nowrap 
                      px-4 py-2 rounded-md text-[var(--clay)]
                      hover:bg-[var(--clay)] hover:text-white transition"
         >
           View All →
-        </a>
+        </Link>
       </div>
 
       {/* Grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {artisans.map((a, index) => (
-          <ArtisanCard key={index} artisan={a}/>
+        {entrepreneurs.map((a) => (
+          <ArtisanCard key={a._id} artisan={a} />
         ))}
       </div>
     </section>

@@ -11,30 +11,47 @@ import {
 import { getChips } from "../../utils/EntrepreneurFilters";
 import UserRow from "./UserRow";
 import Spinner from "../Shared/Spinner";
+import ErrorState from "../../pages/ErrorState";
+import NoInternet from "../../pages/NoInternet";
+import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
+import Pagination from "../Shared/Pagination";
 
 export default function Users() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const isOnline = useNetworkStatus();
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError, isFetching } = useUsers(
-    activeFilter,
+  const { data, isLoading, isError, isFetching, refetch } = useUsers(
     search,
+    activeFilter,
+    page,
   );
 
   const blockMutation = useBlockUsers();
   const unblockMutation = useUnblockUsers();
 
-  if (isError) return <p className="flex-1 flex items-center justify-center">Error loading Users</p>;
-
   const users = data?.users ?? [];
-
   const chips = getChips(data?.stats, data?.totalUsers);
 
+  if (!isOnline) {
+    return <NoInternet />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        message="Failed to load users"
+        onRetry={refetch}
+        isLoading={isFetching}
+      />
+    );
+  }
   return (
-    <div className="flex-1 flex flex-col p-6 space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
+    <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
       <Header
         title="User Management"
-        description={`${data?.totalUsers} registered customers`}
+        description={`${data?.totalUsers || 0} registered customers`}
       />
 
       {isLoading ? (
@@ -47,12 +64,18 @@ export default function Users() {
             <FilterChips
               chips={chips.reverse()}
               active={activeFilter}
-              onChange={setActiveFilter}
+              onChange={(value) => {
+                setActiveFilter(value);
+                setPage(1);
+              }}
             />
 
             <SearchInput
               value={search}
-              onChange={setSearch}
+              onChange={(value) => {
+                setSearch(value);
+                setPage(1);
+              }}
               placeholder="Search entrepreneur..."
               className="w-70 max-lg:w-full"
             />
@@ -78,6 +101,12 @@ export default function Users() {
                 unblockMutation={unblockMutation}
               />
             )}
+          />
+
+          <Pagination
+            page={data?.page ?? 1}
+            totalPages={data?.totalPages ?? 1}
+            onPageChange={setPage}
           />
         </>
       )}

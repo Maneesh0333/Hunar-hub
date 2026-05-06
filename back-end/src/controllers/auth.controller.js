@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import Session from "../models/Session.model.js";
-import verifyMail from "../services/verifyMail.js"
+import verifyMail from "../services/verifyMail.js";
 
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password, phone, signupAs } = req.body;
@@ -24,6 +24,7 @@ export const register = asyncHandler(async (req, res) => {
   // Create verification OTP
   const rawOtp = crypto.randomInt(100000, 1000000).toString();
   const hashedOtp = crypto.createHash("sha256").update(rawOtp).digest("hex");
+  console.log("rawOtp", rawOtp);
 
   const user = await User.create({
     name,
@@ -73,20 +74,20 @@ export const login = asyncHandler(async (req, res) => {
     user.emailVerifyOtp = hashedOtp;
     user.emailVerifyExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
+    console.log("rawOtp", rawOtp);
 
     await verifyMail(email, rawOtp);
 
     return res.status(403).json({
       success: false,
       message: "Email not verified. OTP sent again.",
-      requiresVerification: true,
+      code: "EMAIL_NOT_VERIFIED",
     });
   }
 
   // Compare password
   const isMatch = await bcrypt.compare(password, user.password);
 
-  console.log(isMatch, "-----")
   if (!isMatch) {
     throw new AppError("Invalid email or password", 401);
   }
@@ -102,7 +103,6 @@ export const login = asyncHandler(async (req, res) => {
       return res.status(403).json({
         success: false,
         message: "Your entrepreneur account is under review",
-        entrepreneurStatus: "Pending",
       });
     }
 
@@ -110,7 +110,6 @@ export const login = asyncHandler(async (req, res) => {
       return res.status(403).json({
         success: false,
         message: "Your entrepreneur request was rejected",
-        entrepreneurStatus: "Rejected",
       });
     }
   }
@@ -148,13 +147,12 @@ export const login = asyncHandler(async (req, res) => {
   });
 
   // Fillter User
-
-  const fillteredUser = {}
+  const fillteredUser = {};
   fillteredUser.id = user._id;
   fillteredUser.name = user.name;
-  fillteredUser.email = user.email
-  fillteredUser.phone = user.phone
-  fillteredUser.role = user.role
+  fillteredUser.email = user.email;
+  fillteredUser.phone = user.phone;
+  fillteredUser.role = user.role;
 
   // Send access token in response body
   res.status(200).json({
@@ -163,8 +161,7 @@ export const login = asyncHandler(async (req, res) => {
     data: {
       accessToken,
       user: fillteredUser,
-      id: user._id
-    }
+    },
   });
 });
 
@@ -298,5 +295,26 @@ export const refreshToken = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     accessToken: newAccessToken,
+  });
+});
+
+export const getMe = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id).select(
+    "_id name email phone role",
+  );
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  res.status(200).json({
+    success: true,
+    data: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+    },
   });
 });

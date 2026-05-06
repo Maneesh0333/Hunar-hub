@@ -1,9 +1,8 @@
 export default function Footer() {
   return (
     <>
-      <footer className="bg-[var(--ink)] px-6 md:px-16 py-16">
+      <footer className="bg-[var(--ink)] px-16 max-md:px-6 py-10">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
-          
           {/* Brand */}
           <div>
             <div className="font-playfair text-3xl font-black text-white">
@@ -11,20 +10,15 @@ export default function Footer() {
             </div>
 
             <p className="mt-4 text-sm leading-relaxed text-white/45 max-w-xs">
-              Connecting skilled local artisans with customers who value handcrafted quality.
-              Built with MERN. Powered by community.
+              Connecting skilled local artisans with customers who value
+              handcrafted quality. Built with MERN. Powered by community.
             </p>
           </div>
 
           {/* Platform */}
           <FooterColumn
             title="Platform"
-            links={[
-              "Browse Artisans",
-              "Categories",
-              "How It Works",
-              "Pricing"
-            ]}
+            links={["Browse Artisans", "Categories", "How It Works", "Pricing"]}
           />
 
           {/* Artisans */}
@@ -34,19 +28,14 @@ export default function Footer() {
               "Join as Artisan",
               "Verification",
               "Earnings Guide",
-              "Success Stories"
+              "Success Stories",
             ]}
           />
 
           {/* Company */}
           <FooterColumn
             title="Company"
-            links={[
-              "About Us",
-              "Blog",
-              "Privacy Policy",
-              "Contact"
-            ]}
+            links={["About Us", "Blog", "Privacy Policy", "Contact"]}
           />
         </div>
       </footer>
@@ -61,9 +50,8 @@ export default function Footer() {
   );
 }
 
-
 /* Reusable Column Component */
-function FooterColumn({ title, links }) {
+function FooterColumn({ title, links }: { title: string; links: string[] }) {
   return (
     <div>
       <h4 className="text-xs font-semibold tracking-[0.2em] uppercase text-white/60 mb-6">

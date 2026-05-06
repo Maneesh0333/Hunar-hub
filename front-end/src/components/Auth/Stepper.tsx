@@ -12,8 +12,8 @@ export default function Stepper({ steps, currentStep }: StepperProps) {
     currentStep === "Details"
       ? "0%"
       : currentStep === "Verify"
-      ? "50%"
-      : "100%";
+        ? "50%"
+        : "100%";
 
   return (
     <div className="relative grid grid-cols-3 text-xs text-[#6B4A2D]">
@@ -33,15 +33,17 @@ export default function Stepper({ steps, currentStep }: StepperProps) {
           index === 0
             ? "items-start"
             : index === 1
-            ? "items-center"
-            : "items-end";
+              ? "items-center"
+              : "items-end";
 
         const stepStyles =
-          index === currentIndex
-            ? "bg-[var(--clay)] text-[var(--warm-white)]"
-            : index > currentIndex
-            ? "bg-[var(--warm-white)] text-[var(--earth)] border border-[rgba(196,99,42,0.15)]"
-            : "bg-green-600 text-[var(--warm-white)]";
+          currentStep === "Done"
+            ? "bg-green-600 text-[var(--warm-white)]"
+            : index === currentIndex
+              ? "bg-[var(--clay)] text-[var(--warm-white)]"
+              : index > currentIndex
+                ? "bg-[var(--warm-white)] text-[var(--earth)] border border-[rgba(196,99,42,0.15)]"
+                : "bg-green-600 text-[var(--warm-white)]";
 
         return (
           <div key={step} className={`flex flex-col gap-2 ${alignment}`}>
