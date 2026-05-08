@@ -2,7 +2,6 @@
 
 A full-stack MERN platform connecting skilled local entrepreneurs with users for services, bookings, and business growth.
 
----
 
 # ✨ Features
 
@@ -34,7 +33,6 @@ A full-stack MERN platform connecting skilled local entrepreneurs with users for
 - Handle complaints
 - Manage reviews and platform activity
 
----
 
 # 🚀 Tech Stack
 
@@ -63,7 +61,6 @@ A full-stack MERN platform connecting skilled local entrepreneurs with users for
 - Nodemailer
 - Redis
 
----
 
 # 🔐 Environment Variables
 
@@ -97,7 +94,6 @@ EMAIL_USER=your_email
 EMAIL_PASS=your_email_password
 ```
 
----
 
 # 🧩 Main Modules
 
@@ -125,7 +121,6 @@ EMAIL_PASS=your_email_password
 - Revenue overview
 - Booking income records
 
----
 
 # 🎥 Demo
 https://github.com/user-attachments/assets/a9e996bd-e663-4c32-a23f-b5501bb330d5
