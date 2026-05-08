@@ -1,11 +1,12 @@
-# HunarHub
+# 🌟 HunarHub
 
 A full-stack MERN platform connecting skilled local entrepreneurs with users for services, bookings, and business growth.
 
+---
 
-# Features
+# ✨ Features
 
-## User
+## 👤 User
 - Browse entrepreneurs by category
 - Search services and profiles
 - Book services
@@ -14,7 +15,7 @@ A full-stack MERN platform connecting skilled local entrepreneurs with users for
 - Real-time chat with entrepreneurs
 - Leave ratings and reviews
 
-## Entrepreneur
+## 🧵 Entrepreneur
 - Create and manage profile
 - Upload portfolio images
 - Manage services
@@ -24,7 +25,7 @@ A full-stack MERN platform connecting skilled local entrepreneurs with users for
 - Receive customer reviews
 - Real-time messaging
 
-## Admin
+## 🛠️ Admin
 - Dashboard overview
 - Approve entrepreneur applications
 - Manage users and entrepreneurs
@@ -33,10 +34,11 @@ A full-stack MERN platform connecting skilled local entrepreneurs with users for
 - Handle complaints
 - Manage reviews and platform activity
 
+---
 
-# Tech Stack
+# 🚀 Tech Stack
 
-## Frontend
+## 🎨 Frontend
 - React
 - TypeScript
 - TanStack Query (React Query)
@@ -49,7 +51,7 @@ A full-stack MERN platform connecting skilled local entrepreneurs with users for
 - React Router DOM
 - Axios
 
-## Backend
+## ⚙️ Backend
 - Node.js
 - Express.js
 - MongoDB
@@ -61,8 +63,9 @@ A full-stack MERN platform connecting skilled local entrepreneurs with users for
 - Nodemailer
 - Redis
 
+---
 
-# Environment Variables
+# 🔐 Environment Variables
 
 Create a `.env` file inside the backend folder.
 
@@ -94,33 +97,35 @@ EMAIL_USER=your_email
 EMAIL_PASS=your_email_password
 ```
 
+---
 
-# Main Modules
-## Authentication
+# 🧩 Main Modules
+
+## 🔑 Authentication
 - JWT access & refresh tokens
 - Protected routes
 - Role-based authorization
 
-## Booking System
+## 📦 Booking System
 - Service booking flow
 - Booking status management
 - Schedule tracking
 
-## Portfolio Management
+## 🖼️ Portfolio Management
 - Upload portfolio images
 - Cloudinary image storage
 - Entrepreneur showcase section
 
-## Real-Time Chat
+## 💬 Real-Time Chat
 - Socket.IO based messaging
 - User ↔ Entrepreneur communication
 
-## Earnings System
+## 💰 Earnings System
 - Entrepreneur earnings tracking
 - Revenue overview
 - Booking income records
 
+---
 
-# Demo
+# 🎥 Demo
 https://github.com/user-attachments/assets/a9e996bd-e663-4c32-a23f-b5501bb330d5
-
