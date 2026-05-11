@@ -57,9 +57,7 @@ A full-stack MERN platform connecting skilled local entrepreneurs with users for
 - Socket.IO
 - Cloudinary
 - Multer
-- Razorpay
 - Nodemailer
-- Redis
 
 
 # 🔐 Environment Variables
