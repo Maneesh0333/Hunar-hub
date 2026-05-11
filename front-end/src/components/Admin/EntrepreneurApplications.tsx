@@ -49,6 +49,7 @@ export default function EntrepreneurApplications() {
       />
     );
   }
+
   return (
     <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
       <Header
@@ -97,7 +98,7 @@ export default function EntrepreneurApplications() {
             )}
           />
           <Pagination
-            page={data?.page ?? 1}
+            page={page}
             totalPages={data?.totalPages ?? 1}
             onPageChange={setPage}
           />

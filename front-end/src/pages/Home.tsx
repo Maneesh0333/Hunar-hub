@@ -3,11 +3,12 @@ import NavBar from "../components/NavBar";
 import Hero from "../components/Hero";
 import Footer from "../components/Footer";
 import Spinner from "../components/Shared/Spinner";
+import AboutUs from "../components/User/AboutUs";
+import HowItWorks from "../components/HowItWorks";
+import Testimonials from "../components/Testimonials";
 
 const Categories = lazy(() => import("../components/Categories"));
-const HowItWorks = lazy(() => import("../components/HowItWorks"));
 const FeaturedArtisans = lazy(() => import("../components/FeaturedArtisans"));
-const Testimonials = lazy(() => import("../components/Testimonials"));
 
 function Home() {
   return (
@@ -17,16 +18,28 @@ function Home() {
 
       <Suspense
         fallback={
-          <div className="flex items-center justify-center min-h-60">
+          <div className="flex items-center justify-center min-h-96">
             <Spinner />
           </div>
         }
       >
         <Categories />
-        <HowItWorks />
-        <FeaturedArtisans />
-        <Testimonials />
       </Suspense>
+
+      <HowItWorks />
+
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center min-h-96">
+            <Spinner />
+          </div>
+        }
+      >
+        <FeaturedArtisans />
+      </Suspense>
+
+      <Testimonials />
+      <AboutUs />
 
       <Footer />
     </>

@@ -7,12 +7,15 @@ import {
 
 type Props = {
   item: Booking;
-  statusMutation: ReturnType<typeof useUpdateBookingStatus>
-  paymentStatusMutation: ReturnType<typeof useUpdatePaymentStatus>
+  statusMutation: ReturnType<typeof useUpdateBookingStatus>;
+  paymentStatusMutation: ReturnType<typeof useUpdatePaymentStatus>;
 };
 
-export default function BookingRow({ item, paymentStatusMutation, statusMutation }: Props) {
-
+export default function BookingRow({
+  item,
+  paymentStatusMutation,
+  statusMutation,
+}: Props) {
   const isUpdating = statusMutation.isPending;
 
   const isAccepting =
@@ -56,8 +59,8 @@ export default function BookingRow({ item, paymentStatusMutation, statusMutation
       {/* 👤 Customer */}
       <td className="px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center text-lg">
-            👩
+          <div className="w-10 h-10 rounded-lg font-semibold bg-orange-100 flex items-center justify-center text-lg">
+            {item.customer.name[0]}
           </div>
           <p className="font-medium">{item.customer.name}</p>
         </div>
@@ -104,7 +107,7 @@ export default function BookingRow({ item, paymentStatusMutation, statusMutation
       </td>
 
       {/* ⚡ Actions */}
-      <td className="px-4 py-4 flex-1 flex items-center justify-center gap-2 whitespace-nowrap">
+      <td className="px-4 flex-1 whitespace-nowrap space-x-2">
         {item.status === "Pending" && (
           <>
             <ActionButton

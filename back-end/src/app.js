@@ -13,21 +13,27 @@ import { globalLimiter } from "./middleware/global-limiter.middleware.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
+import compression from "compression";
 import { errorHandler } from "./middleware/error.middleware.js";
 import { notFound } from "./middleware/notFound.middleware.js";
 
 const app = express();
 
 // Middleware
-app.use(express.json({ limit: "10kb" }));
+app.set("trust proxy", 1);
+app.disable("x-powered-by");
+
+app.use(helmet());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: [process.env.FRONTEND_URL, "http://localhost:4173"],
     credentials: true,
   }),
 );
+app.use(compression());
+app.use(express.json({ limit: "10kb" }));
+
 app.use(cookieParser());
-app.use(helmet());
 app.use(globalLimiter);
 
 app.use("/auth", authRoutes);

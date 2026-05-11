@@ -8,6 +8,7 @@ import {
   updateUserBookingStatus,
   updatePaymentStatus,
   getAllBookingsAdmin,
+  getMyEarning,
 } from "../controllers/booking.controller.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { bookingSchema } from "../validations/booking.validation.js";
@@ -24,7 +25,8 @@ router.patch("/:id/cancel", restrictTo("User"), validateObjectId, updateUserBook
 
 
 /* ================= ENTREPRENEUR ROUTES ================= */
-router.get("/entrepreneur", restrictTo("Entrepreneur"), getEntrepreneurBookings,);
+router.get("/entrepreneur", restrictTo("Entrepreneur"), getEntrepreneurBookings);
+router.get("/earning", restrictTo("Entrepreneur"), getMyEarning);
 router.patch("/:id/status", restrictTo("Entrepreneur"), validateObjectId, updateBookingStatus);
 router.patch("/:id/payment/status", restrictTo("Entrepreneur"), validateObjectId, updatePaymentStatus);
 

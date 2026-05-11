@@ -1,6 +1,9 @@
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
+
 import Message from "./models/message.model.js";
 import Conversation from "./models/conversation.model.js";
+import AppError from "./utils/AppError.js";
 
 export const initSocket = (server) => {
   const io = new Server(server, {
@@ -10,31 +13,61 @@ export const initSocket = (server) => {
     },
   });
 
+  /* ✅ SOCKET AUTH */
+  io.use((socket, next) => {
+    try {
+      const token = socket.handshake.auth.accessToken;
+
+      if (!token) {
+        return next(new AppError("Unauthorized", 401));
+      }
+
+      const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+      socket.user = decoded;
+
+      next();
+    } catch (err) {
+      next(new AppError("Invalid token", 401));
+    }
+  });
+
   io.on("connection", (socket) => {
     console.log("⚡ Connected:", socket.id);
 
-    /* ---------- JOIN USER ---------- */
-    socket.on("join", (userId) => {
-      if (!userId) return;
-      socket.join(userId);
-    });
+    /* ✅ AUTO JOIN USER ROOM */
+    socket.join(socket.user.id);
 
     /* ---------- JOIN CONVERSATION ---------- */
-    socket.on("join_conversation", (conversationId) => {
+    socket.on("join_conversation", async (conversationId) => {
       if (!conversationId) return;
+
+      const conversation = await Conversation.findById(conversationId);
+
+      if (!conversation) return;
+
+      const isMember = conversation.participants.some(
+        (id) => id.toString() === socket.user.id,
+      );
+
+      if (!isMember) return;
+
       socket.join(conversationId);
     });
 
     /* ---------- LEAVE CONVERSATION ---------- */
     socket.on("leave_conversation", (conversationId) => {
       if (!conversationId) return;
+
       socket.leave(conversationId);
     });
 
     /* ---------- MARK AS READ ---------- */
-    socket.on("mark_as_read", async ({ conversationId, userId }) => {
+    socket.on("mark_as_read", async ({ conversationId }) => {
       try {
-        if (!conversationId || !userId) return;
+        if (!conversationId) return;
+
+        const userId = socket.user.id;
 
         await Message.updateMany(
           {
@@ -58,21 +91,37 @@ export const initSocket = (server) => {
     /* ---------- SEND MESSAGE ---------- */
     socket.on("send_message", async (data) => {
       try {
-        const { conversationId, senderId, receiverId, text } = data;
-        if (!conversationId || !senderId || !receiverId || !text) return;
+        const { conversationId, receiverId, text } = data;
+
+        const senderId = socket.user.id;
+
+        if (!conversationId || !receiverId || !text?.trim()) {
+          return;
+        }
+
+        const conversation = await Conversation.findById(conversationId);
+
+        if (!conversation) return;
+
+        const isMember = conversation.participants.some(
+          (id) => id.toString() === senderId,
+        );
+
+        if (!isMember) return;
 
         const message = await Message.create({
           conversation: conversationId,
           sender: senderId,
-          text,
-          readBy: [senderId], // sender already read
+          text: text.trim(),
+          readBy: [senderId],
         });
 
         const populated = await message.populate("sender", "name");
 
-        // update last message in conversation
         await Conversation.findByIdAndUpdate(conversationId, {
-          $set: { lastMessage: text },
+          $set: {
+            lastMessage: text,
+          },
         });
 
         io.to(conversationId).emit("receive_message", populated);

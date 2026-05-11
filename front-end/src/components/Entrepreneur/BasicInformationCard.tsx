@@ -36,7 +36,7 @@ function BasicInformationCard({ data }: { data: EntrepreneurProfile | undefined 
           <InputField
             label="Experience (Years)"
             readOnly={true}
-            value={data?.experienceYears}
+            value={data?.experienceYears.toString() || "0"}
             inputClassName="!px-3 !py-2 text-sm"
           />
         </div>

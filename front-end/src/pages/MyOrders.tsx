@@ -204,7 +204,7 @@ export default function MyOrders() {
                       {item.status === "Completed" && !item.isReviewed && (
                         <button
                           onClick={() => setSelectedBooking(item._id)}
-                          className="text-xs font-bold text-[var(--clay)] hover:underline"
+                          className="text-xs font-bold text-[var(--clay)] cursor-pointer hover:underline"
                         >
                           Write Review
                         </button>
@@ -220,7 +220,7 @@ export default function MyOrders() {
                         !item.isComplained && (
                           <button
                             onClick={() => setComplaintBooking(item._id)}
-                            className="text-xs font-bold text-red-500 hover:underline"
+                            className="text-xs font-bold text-red-500 cursor-pointer hover:underline"
                           >
                             Report Issue
                           </button>

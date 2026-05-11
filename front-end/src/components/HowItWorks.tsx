@@ -22,7 +22,8 @@ const steps = [
 export default function HowItWorks() {
   return (
     <section
-      className="relative bg-[var(--earth)]  px-16 max-md:px-6 py-10"
+      id="how-it-works"
+      className="relative bg-[var(--earth)]  px-16 max-md:px-6 py-10 max-md:py-15"
     >
       {/* Header */}
       <p className="text-xs tracking-[0.3em] font-semibold uppercase text-[var(--clay-light)] mb-3">

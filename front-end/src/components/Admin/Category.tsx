@@ -146,6 +146,7 @@ export default function Categories() {
         }
       >
         <CategoryForm
+          key={selectedCategory?._id || "create_category"}
           category={selectedCategory}
           closeSheet={() => setOpen(false)}
         />

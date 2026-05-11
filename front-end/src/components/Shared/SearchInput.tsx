@@ -20,7 +20,7 @@ export default function SearchInput({
 
   useEffect(() => {
     onChange(debouncedValue);
-  }, [debouncedValue, onChange]);
+  }, [debouncedValue]);
 
   return (
     <input

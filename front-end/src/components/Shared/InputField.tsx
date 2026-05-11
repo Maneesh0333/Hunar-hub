@@ -1,38 +1,31 @@
 import type {
-  FieldErrors,
-  FieldValues,
-  Path,
-  UseFormRegister,
+  FieldError,
+  UseFormRegisterReturn,
 } from "react-hook-form";
-import type React from "react";
 
-type InputFieldProps<T extends FieldValues> = {
-  name?: Path<T>;
+type InputFieldProps = {
   label: string;
   placeholder?: string;
   type?: "text" | "password" | "email" | "number" | "time";
-  register?: UseFormRegister<T>;
-  errors?: FieldErrors<T>;
+  registration?: UseFormRegisterReturn;
+  error?: FieldError;
+  value?: string | number;
   children?: React.ReactNode;
   inputClassName?: string;
-  value?: string | number;
   readOnly?: boolean;
 };
 
-function InputField<T extends FieldValues>({
-  name,
+function InputField({
   label,
   placeholder,
   type = "text",
-  register,
-  errors,
+  registration,
+  value,
+  error,
   children,
   inputClassName = "",
-  value = "",
   readOnly = false,
-}: InputFieldProps<T>) {
-  const registerProps = register && name ? register(name) : {};
-
+}: InputFieldProps) {
   return (
     <div>
       <label className="text-xs font-semibold tracking-wide text-[var(--clay)]">
@@ -41,19 +34,19 @@ function InputField<T extends FieldValues>({
 
       <input
         type={type}
-        readOnly={readOnly}
-        {...registerProps}
-        {...(readOnly ? { value } : {})}
         placeholder={placeholder}
+        value={value? value : undefined}
+        readOnly={readOnly}
+        {...registration}
         className={`mt-2 w-full px-4 py-3 rounded-xl
-  border border-[rgba(196,99,42,0.2)]
-  focus:outline-none focus:border-[var(--clay)]
-  bg-white ${inputClassName}`}
+        border border-[rgba(196,99,42,0.2)]
+        focus:outline-none focus:border-[var(--clay)]
+        bg-white ${inputClassName}`}
       />
 
-      {errors && name && errors[name] && (
+      {error && (
         <p className="text-xs text-red-500 mt-1">
-          {String(errors[name]?.message)}
+          {error.message}
         </p>
       )}
 

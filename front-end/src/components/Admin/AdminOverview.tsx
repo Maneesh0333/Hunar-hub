@@ -1,13 +1,15 @@
+import { lazy, Suspense } from "react";
 import { useAdminDashboard } from "../../hooks/Admin/useAdminDashboard";
 import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
 import ErrorState from "../../pages/ErrorState";
 import NoInternet from "../../pages/NoInternet";
 import type { QuickAction } from "../../types/shared/types";
-import AdminGrowthChart from "../charts/AdminGrowthChart";
 import QuickActions from "../QuickActions";
 import Header from "../Shared/Header";
 import Spinner from "../Shared/Spinner";
 import StatsGrid from "../StatsGrid";
+
+const AdminGrowthChart = lazy(() => import("../charts/AdminGrowthChart"));
 
 const adminActions: QuickAction[] = [
   {
@@ -99,9 +101,17 @@ export default function AdminOverview() {
       ) : (
         <div className="flex flex-col gap-5">
           <StatsGrid statsData={statsData} />
-          {/* PLATFORM ACTIVITY */}
-          <AdminGrowthChart growth={data?.charts?.growth} />
-          {/* Quick Actions */}
+
+          <Suspense
+            fallback={
+              <div className="w-full h-[450px] bg-white rounded-2xl flex items-center justify-center">
+                <Spinner />
+              </div>
+            }
+          >
+            <AdminGrowthChart growth={data?.charts?.growth} />
+          </Suspense>
+
           <QuickActions actions={adminActions} />
         </div>
       )}

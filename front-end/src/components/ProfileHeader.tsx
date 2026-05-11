@@ -77,9 +77,9 @@ function ProfileHeader({ page, data, onEdit, bookRef }: ProfileHeaderProp) {
               </div>
 
               <div className="flex items-center">
-                <div className="text-xl">⚡</div>
+                <div className="text-xl">💵</div>
                 <div className="text-xs text-[#5C3A1E]">
-                  Usually responds in 30 min
+                  {data?.payment.toString() || "Payment not added"}
                 </div>
               </div>
 

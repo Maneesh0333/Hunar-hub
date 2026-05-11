@@ -1,6 +1,5 @@
-import { useEffect } from "react";
 import InputField from "../Shared/InputField";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Header from "./Header";
 
@@ -22,19 +21,19 @@ function Register({ setCurrentStep, setEmail, role }: RegisterProps) {
     handleSubmit,
     register,
     control,
-    reset,
     setValue,
     formState: { errors, isValid },
   } = useForm<RegisterFormType>({
     resolver: yupResolver(registerSchema),
     mode: "onChange",
+    values: {
+      signupAs: role,
+      email: "",
+      name: "",
+      password: "",
+      phone: "",
+    },
   });
-
-  useEffect(() => {
-    if (role) {
-      reset({ signupAs: role });
-    }
-  }, [role, reset]);
 
   const signupAs = useWatch({
     control,
@@ -65,70 +64,72 @@ function Register({ setCurrentStep, setEmail, role }: RegisterProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {/* Full Name */}
         <InputField
-          name="name"
           label="NAME"
           placeholder="Your Name"
-          register={register}
-          errors={errors}
+          registration={register("name")}
+          error={errors.name}
         />
 
         {/* Phone */}
         <InputField
-          name="phone"
           label="MOBILE NUMBER"
           placeholder="98765 43210"
-          register={register}
-          errors={errors}
+          registration={register("phone")}
+          error={errors.phone}
         />
 
         {/* Email */}
         <InputField
-          name="email"
           label="EMAIL"
           placeholder="email@example.com"
-          register={register}
-          errors={errors}
+          registration={register("email")}
+          error={errors.email}
         />
 
         {/* Password */}
         <InputField
-          name="password"
           label="PASSWORD"
           placeholder="Enter your password"
           type="password"
-          register={register}
-          errors={errors}
+          registration={register("password")}
+          error={errors.password}
         />
 
         {/* Role */}
-        <div>
-          <label className="text-xs font-semibold tracking-wide text-[var(--clay)]">
-            I AM SIGNING UP AS
-          </label>
-          <div className="grid grid-cols-2 mt-2 gap-3">
-            <div
-              onClick={() => setValue("signupAs", "User")}
-              className={`${signupAs === "User" ? "bg-[var(--cream)] border-[var(--clay)] text-[var(--clay)]" : "bg-white border-[rgba(196,99,42,0.2)] text-[var(--earth-mid)]"} flex flex-col items-center px-5 py-3 border rounded-2xl cursor-pointer`}
-            >
-              <span className="text-[22px]">🛍️</span>
-              <h1 className="text-xs font-semibold mt-1">Customer</h1>
-              <p className="text-[10px] text-[var(--earth-mid)]">
-                Book artisans
-              </p>
-            </div>
+        <Controller
+          name="signupAs"
+          control={control}
+          render={() => (
+            <div>
+              <label className="text-xs font-semibold tracking-wide text-[var(--clay)]">
+                I AM SIGNING UP AS
+              </label>
+              <div className="grid grid-cols-2 mt-2 gap-3">
+                <div
+                  onClick={() => setValue("signupAs", "User")}
+                  className={`${signupAs === "User" ? "bg-[var(--cream)] border-[var(--clay)] text-[var(--clay)]" : "bg-white border-[rgba(196,99,42,0.2)] text-[var(--earth-mid)]"} flex flex-col items-center px-5 py-3 border rounded-2xl cursor-pointer`}
+                >
+                  <span className="text-[22px]">🛍️</span>
+                  <h1 className="text-xs font-semibold mt-1">Customer</h1>
+                  <p className="text-[10px] text-[var(--earth-mid)]">
+                    Book artisans
+                  </p>
+                </div>
 
-            <div
-              onClick={() => setValue("signupAs", "Entrepreneur")}
-              className={`${signupAs === "Entrepreneur" ? "bg-[var(--cream)] border-[var(--clay)] text-[var(--clay)]" : "bg-white border-[rgba(196,99,42,0.2)] text-[var(--earth-mid)]"} flex flex-col items-center px-5 py-3 border rounded-2xl cursor-pointer`}
-            >
-              <span className="text-[22px]">🧵</span>
-              <h1 className="text-xs font-semibold mt-1">Artisan</h1>
-              <p className="text-[10px] text-[var(--earth-mid)]">
-                Offer services
-              </p>
+                <div
+                  onClick={() => setValue("signupAs", "Entrepreneur")}
+                  className={`${signupAs === "Entrepreneur" ? "bg-[var(--cream)] border-[var(--clay)] text-[var(--clay)]" : "bg-white border-[rgba(196,99,42,0.2)] text-[var(--earth-mid)]"} flex flex-col items-center px-5 py-3 border rounded-2xl cursor-pointer`}
+                >
+                  <span className="text-[22px]">🧵</span>
+                  <h1 className="text-xs font-semibold mt-1">Artisan</h1>
+                  <p className="text-[10px] text-[var(--earth-mid)]">
+                    Offer services
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+        />
 
         {/* agree */}
         <div className="mt-8 text-xs text-[var(--earth)]">

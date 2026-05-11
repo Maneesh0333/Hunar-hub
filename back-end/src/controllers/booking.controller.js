@@ -770,3 +770,172 @@ export const updateUserBookingStatus = asyncHandler(async (req, res) => {
     message: "Booking cancelled successfully",
   });
 });
+
+export const getMyEarning = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 5, search = "" } = req.query;
+
+  const pageNum = Math.max(parseInt(page), 1);
+  const limitNum = Math.min(Math.max(parseInt(limit), 1), 20);
+  const skip = (pageNum - 1) * limitNum;
+
+  /* ---------------- Get Entrepreneur ---------------- */
+  const entrepreneur = await Entrepreneur.findOne({
+    user: req.user.id,
+  });
+
+  if (!entrepreneur) {
+    throw new AppError("Entrepreneur profile not found", 404);
+  }
+
+  /* ---------------- Base + Filter Match ---------------- */
+  const baseMatch = {
+    entrepreneur: entrepreneur._id,
+  };
+
+  /* ---------------- Pipeline ---------------- */
+  const pipeline = [];
+
+  // Always filter by entrepreneur first (performance)
+  pipeline.push({ $match: baseMatch });
+
+  // 👤 Customer
+  pipeline.push({
+    $lookup: {
+      from: "users",
+      localField: "customer",
+      foreignField: "_id",
+      as: "customer",
+    },
+  });
+
+  pipeline.push({ $unwind: "$customer" });
+
+  // 🛠 Service
+  pipeline.push({
+    $lookup: {
+      from: "services",
+      localField: "service",
+      foreignField: "_id",
+      as: "service",
+    },
+  });
+
+  pipeline.push({ $unwind: "$service" });
+
+
+  /* ---------------- Facet ---------------- */ 
+  pipeline.push({
+    $facet: {
+      /* ---------------- BOOKINGS (filtered) ---------------- */
+      bookings: [
+        { $match: { paymentStatus: "Paid" } },
+
+        ...(search
+          ? [
+              {
+                $match: {
+                  $or: [
+                    { bookingId: { $regex: search, $options: "i" } },
+                    { "customer.name": { $regex: search, $options: "i" } },
+                    { "customer.email": { $regex: search, $options: "i" } },
+                    { "customer.phone": { $regex: search, $options: "i" } },
+                    { "service.title": { $regex: search, $options: "i" } },
+                  ],
+                },
+              },
+            ]
+          : []),
+
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limitNum },
+
+        {
+          $project: {
+            bookingId: 1,
+            totalAmount: 1,
+            paymentStatus: 1,
+            createdAt: 1,
+
+            "customer._id": 1,
+            "customer.name": 1,
+            "customer.email": 1,
+            "customer.phone": 1,
+
+            "service._id": 1,
+            "service.title": 1,
+            "service.price": 1,
+          },
+        },
+      ],
+
+      /* ---------------- STATS (NOT filtered by status) ---------------- */
+      stats: [
+        {
+          $group: {
+            _id: "$paymentStatus",
+            count: { $sum: 1 },
+          },
+        },
+      ],
+
+      /* ---------------- TOTAL FILTERED ---------------- */
+      totalFiltered: [
+        { $match: { paymentStatus: "Paid" } },
+        { $count: "count" },
+      ],
+
+      totalEarning: [
+        { $match: { paymentStatus: "Paid" } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$totalAmount" },
+          },
+        },
+      ],
+
+      /* ---------------- TOTAL ALL ---------------- */
+      totalBookings: [{ $count: "count" }],
+    },
+  });
+
+  /* ---------------- Execute ---------------- */
+
+  const result = await Booking.aggregate(pipeline);
+
+  const bookings = result[0].bookings;
+
+  const totalFiltered = result[0].totalFiltered[0]?.count || 0;
+  const totalBookings = result[0].totalBookings[0]?.count || 0;
+  const totalEarning = result[0].totalEarning[0]?.total || 0;
+
+  const statsArray = result[0].stats;
+
+  let stats = {
+    Pending: 0,
+    Paid: 0,
+  };
+
+  statsArray.forEach((s) => {
+    stats[s._id] = s.count;
+  });
+
+  /* ---------------- Response ---------------- */
+
+  res.status(200).json({
+    success: true,
+    message: "Earning fetched successfully",
+    data: {
+      bookings,
+      stats,
+      page: pageNum,
+      limit: limitNum,
+      total: totalFiltered,
+      totalBookings,
+      totalPages: Math.ceil(totalFiltered / limitNum),
+      results: bookings.length,
+      totalEarning,
+    },
+  });
+});

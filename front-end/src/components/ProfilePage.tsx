@@ -14,6 +14,7 @@ import NavBar from "./NavBar";
 import NoInternet from "../pages/NoInternet";
 import { useNetworkStatus } from "../hooks/Shared/useNetworkStatus";
 import ErrorState from "../pages/ErrorState";
+import PortfolioSection from "./Entrepreneur/PortfolioSection";
 
 export default function ProfilePage() {
   const { id } = useParams();
@@ -68,8 +69,12 @@ export default function ProfilePage() {
               {/* SERVICES */}
               <ServicesOffered id={id} />
 
+               {/* Portfolio */}
+              <PortfolioSection page="User" EntrepreneurId={id}/>
+
               {/* Reviews */}
               <Reviews entrepreneurId={id} />
+
 
               {/* BOOKING */}
               <section
@@ -90,8 +95,7 @@ export default function ProfilePage() {
                 <div className="text-xs bg-green-50 text-green-700 border border-green-200 rounded-lg px-3 py-2 flex items-start gap-2">
                   <span>🛡️</span>
                   <span>
-                    Book through our platform for <b>verified professionals</b>,
-                    secure payments, and reliable support.
+                    Book through our platform for <b>verified professionals</b> and reliable support.
                   </span>
                 </div>
 

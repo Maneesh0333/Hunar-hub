@@ -10,8 +10,8 @@ export default function Categories() {
   return (
     <section
       id="categories"
-      className=" px-16 max-md:px-6
-        py-10 bg-[var(--cream)]"
+      className="px-16 max-md:px-6
+        py-10 max-md:py-15  bg-[var(--cream)]"
     >
       {/* Header */}
       <div className="flex items-end justify-between mb-12">

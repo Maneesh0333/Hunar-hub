@@ -40,7 +40,6 @@ export default function Chat() {
   useEffect(() => {
     if (!activeConversation?.id || !user) return;
 
-    socket.emit("join", user.id);
     socket.emit("join_conversation", activeConversation.id);
 
     return () => {
@@ -60,7 +59,6 @@ export default function Chat() {
 
     socket.emit("mark_as_read", {
       conversationId: activeConversation.id,
-      userId: user.id,
     });
   }, [messageData, activeConversation?.id, user]);
 

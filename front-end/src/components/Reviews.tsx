@@ -82,12 +82,6 @@ export default function Reviews({
     );
   }
 
-  if (allReviews.length === 0)
-    return (
-      <div className="flex h-full items-center justify-center">
-        No reviews yet
-      </div>
-    );
 
   return (
     <div className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6">

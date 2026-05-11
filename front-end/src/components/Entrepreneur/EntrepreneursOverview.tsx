@@ -1,5 +1,3 @@
-import BookingsChart from "../charts/BookingsChart";
-import BookingStatusPie from "../charts/BookingStatusPie";
 import QuickActions from "../QuickActions";
 import StatsGrid from "../StatsGrid";
 import Header from "../Shared/Header";
@@ -10,7 +8,10 @@ import ErrorState from "../../pages/ErrorState";
 import NoInternet from "../../pages/NoInternet";
 import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
 import type { QuickAction } from "../../types/shared/types";
+import { lazy, Suspense } from "react";
 
+const BookingsChart = lazy(() => import("../charts/BookingsChart"));
+const BookingStatusPie = lazy(() => import("../charts/BookingStatusPie"));
 
 const entrepreneurActions: QuickAction[] = [
   {
@@ -99,18 +100,38 @@ export default function OverviewPage() {
         </div>
       ) : (
         <>
-          <StatsGrid statsData={statsData} className="xl:grid-cols-3!" />
+          <StatsGrid
+            statsData={statsData}
+            className="max-md:grid-cols-1! grid-cols-3!"
+          />
 
           {/* CHART + Pie */}
           <div className="flex gap-5 max-[1300px]:flex-col">
-            <BookingsChart
-              data={data?.charts?.monthlyBookings || []}
-              total={data?.stats?.totalOrders || 0}
-            />
-            <BookingStatusPie
-              data={data?.charts?.statusStats || []}
-              total={data?.stats?.totalOrders || 0}
-            />
+            <Suspense
+              fallback={
+                <div className="flex-1 h-[450px] bg-white rounded-2xl flex items-center justify-center">
+                  <Spinner />
+                </div>
+              }
+            >
+              <BookingsChart
+                data={data?.charts?.monthlyBookings || []}
+                total={data?.stats?.totalOrders || 0}
+              />
+            </Suspense>
+
+            <Suspense
+              fallback={
+                <div className="w-[350px] h-[450px] bg-white rounded-2xl flex items-center justify-center">
+                  <Spinner />
+                </div>
+              }
+            >
+              <BookingStatusPie
+                data={data?.charts?.statusStats || []}
+                total={data?.stats?.totalOrders || 0}
+              />
+            </Suspense>
           </div>
 
           <QuickActions actions={entrepreneurActions} />

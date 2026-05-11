@@ -1,10 +1,12 @@
+import { HashLink as Link } from 'react-router-hash-link';
+
 export default function Footer() {
   return (
     <>
       <footer className="bg-[var(--ink)] px-16 max-md:px-6 py-10">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:grid-cols-5">
           {/* Brand */}
-          <div>
+          <div className='sm:col-span-3 md:col-span-2'>
             <div className="font-playfair text-3xl font-black text-white">
               Hunar<span className="text-[var(--clay-light)]">Hub</span>
             </div>
@@ -18,24 +20,28 @@ export default function Footer() {
           {/* Platform */}
           <FooterColumn
             title="Platform"
-            links={["Browse Artisans", "Categories", "How It Works", "Pricing"]}
+            links={[
+              { lable: "Browse Artisans", link: "/search" },
+              { lable: "How It Works", link: "/home#how-it-works" },
+            ]}
           />
 
           {/* Artisans */}
           <FooterColumn
             title="Artisans"
             links={[
-              "Join as Artisan",
-              "Verification",
-              "Earnings Guide",
-              "Success Stories",
+              { lable: "Join as Artisan", link: "/auth" },
+              { lable: "Success Stories", link: "/home#testimonials" },
             ]}
           />
 
           {/* Company */}
           <FooterColumn
             title="Company"
-            links={["About Us", "Blog", "Privacy Policy", "Contact"]}
+            links={[
+              { lable: "About Us", link: "/home#about" },
+              { lable: "Contact", link: "" },
+            ]}
           />
         </div>
       </footer>
@@ -51,22 +57,29 @@ export default function Footer() {
 }
 
 /* Reusable Column Component */
-function FooterColumn({ title, links }: { title: string; links: string[] }) {
+function FooterColumn({
+  title,
+  links,
+}: {
+  title: string;
+  links: { lable: string; link: string }[];
+}) {
   return (
     <div>
-      <h4 className="text-xs font-semibold tracking-[0.2em] uppercase text-white/60 mb-6">
+      <h4 className="text-xs font-semibold tracking-[0.2em] uppercase text-white/60 mb-3">
         {title}
       </h4>
 
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-2">
         {links.map((link) => (
-          <li key={link}>
-            <a
-              href="#"
+          <li key={link.lable}>
+            <Link
+              smooth
+              to={link.link}
               className="text-sm text-white/40 hover:text-[var(--clay-light)] transition"
             >
-              {link}
-            </a>
+              {link.lable}
+            </Link>
           </li>
         ))}
       </ul>

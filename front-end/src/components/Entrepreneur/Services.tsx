@@ -54,10 +54,10 @@ export default function Services() {
     );
   }
   return (
-    <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
+    <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
       <Header
         title="Services"
-        description={`${data?.totalServices} registered services`}
+        description={`${data?.totalServices || 0} registered services`}
         children={
           <Button
             label="+ Add Service"
@@ -135,6 +135,7 @@ export default function Services() {
         }
       >
         <ServiceForm
+          key={selectedService?._id || "create-service"}
           service={selectedService}
           closeSheet={() => setOpen(false)}
         />

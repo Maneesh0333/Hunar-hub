@@ -3,21 +3,21 @@ export default function Testimonials() {
     {
       quote:
         "HunarHub gave me a way to reach customers beyond my neighbourhood. My earnings tripled in just three months — and I didn't need any tech knowledge to get started.",
-      avatar: "🏺",
+      avatar: "R",
       name: "Ramesh Prajapati",
       role: "Potter · Jaipur",
     },
     {
       quote:
         "I found a cobbler who restored my grandfather's old shoes — something I thought was impossible. The whole booking process took two minutes. Incredible platform.",
-      avatar: "💼",
+      avatar: "A",
       name: "Arjun Mehta",
       role: "Customer · Delhi",
     },
     {
       quote:
         "As an admin, I can see the real impact. Verified artisans are getting consistent orders, reviews are building trust, and the community is growing organically every week.",
-      avatar: "🛡️",
+      avatar: "N",
       name: "Neha Gupta",
       role: "Platform Admin",
     },
@@ -25,8 +25,9 @@ export default function Testimonials() {
 
   return (
     <section
+      id="testimonials"
       className="px-16 max-md:px-6
-        py-10 bg-[var(--warm-white)]"
+        py-10 max-md:py-15 bg-[var(--warm-white)]"
     >
       {/* Header */}
       <p className="text-xs tracking-[0.3em] font-semibold uppercase text-[var(--clay)] mb-3">
@@ -63,7 +64,7 @@ export default function Testimonials() {
               <div
                 className="w-11 h-11 rounded-full
                            bg-[var(--khaki)]
-                           flex items-center justify-center
+                           flex items-center font-semibold justify-center
                            text-lg"
               >
                 {t.avatar}

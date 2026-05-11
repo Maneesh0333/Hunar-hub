@@ -9,6 +9,7 @@ import Spinner from "./components/Shared/Spinner.tsx";
 import RoleRedirect from "./components/Auth/RoleRedirect.tsx";
 import Home from "./pages/Home.tsx";
 import AppInit from "./app/AppInit.tsx";
+import SocketProvider from "./provider/SocketProvider.tsx";
 
 const Search = lazy(() => import("./components/Search.tsx"));
 const AuthPage = lazy(() => import("./pages/AuthPage.tsx"));
@@ -26,6 +27,7 @@ const Entrepreneur = lazy(() => import("./pages/Entrepreneur.tsx"));
 const OverviewPage = lazy(
   () => import("./components/Entrepreneur/EntrepreneursOverview.tsx"),
 );
+const Earning = lazy(() => import("./components/Entrepreneur/Earning.tsx"));
 const OrdersPage = lazy(
   () => import("./components/Entrepreneur/BookingPage.tsx"),
 );
@@ -102,7 +104,9 @@ const router = createBrowserRouter([
     path: "/user",
     element: withSuspense(
       <ProtectedRoute requiredRole="User">
-        <User />
+        <SocketProvider>
+          <User />
+        </SocketProvider>
       </ProtectedRoute>,
     ),
     errorElement: withSuspense(<ErrorPage />),
@@ -118,7 +122,9 @@ const router = createBrowserRouter([
     path: "/entrepreneur",
     element: withSuspense(
       <ProtectedRoute requiredRole="Entrepreneur">
-        <Entrepreneur />
+        <SocketProvider>
+          <Entrepreneur />
+        </SocketProvider>
       </ProtectedRoute>,
     ),
     errorElement: withSuspense(<ErrorPage />),
@@ -131,6 +137,7 @@ const router = createBrowserRouter([
       { path: "reviews", element: withSuspense(<ReviewsPage />) },
       { path: "profile", element: withSuspense(<Profile />) },
       { path: "schedule", element: withSuspense(<Schedule />) },
+      { path: "earnings", element: withSuspense(<Earning />) },
       { path: "*", element: withSuspense(<NotFound />) },
     ],
   },
@@ -154,8 +161,6 @@ const router = createBrowserRouter([
       { path: "categories", element: withSuspense(<Category />) },
       { path: "complaints", element: withSuspense(<Complaints />) },
       { path: "reviews", element: withSuspense(<Reviews />) },
-      { path: "analytics", element: <>Analytics</> },
-      { path: "reports", element: <>Reports</> },
       { path: "*", element: withSuspense(<NotFound />) },
     ],
   },

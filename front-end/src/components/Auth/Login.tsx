@@ -52,23 +52,20 @@ function Login() {
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Email */}
             <InputField
-              name="email"
               label="EMAIL"
               placeholder="email@example.com"
-              register={register}
-              errors={errors}
+              registration={register("email")}
+              error={errors.email}
             />
 
             {/* Password */}
             <InputField
-              name="password"
               label="PASSWORD"
               type="password"
               placeholder="Enter your password"
-              register={register}
-              errors={errors}
+              registration={register("password")}
+              error={errors.password}
             >
               <div className="text-right mt-2">
                 <span className="text-xs text-[var(--clay)] cursor-pointer hover:underline">

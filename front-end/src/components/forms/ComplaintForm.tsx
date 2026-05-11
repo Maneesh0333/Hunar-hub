@@ -7,7 +7,6 @@ import SelectInput from "../Shared/SelectInput";
 import type { ComplaintFormType } from "../../types/user/types";
 import { complaintSchema } from "../../schema/user/complaint.schema";
 
-
 type Props = {
   booking: string;
   closeSheet: () => void;
@@ -25,6 +24,10 @@ export default function ComplaintForm({ booking, closeSheet }: Props) {
   } = useForm<ComplaintFormType>({
     resolver: yupResolver(complaintSchema),
     mode: "onChange",
+    values:{
+      type: "",
+      description: ""
+    }
   });
 
   const onSubmit = (data: ComplaintFormType) => {
@@ -71,9 +74,8 @@ export default function ComplaintForm({ booking, closeSheet }: Props) {
         <InputField
           label="Tell us what happened"
           placeholder="Provide details about the issue..."
-          name="description"
-          errors={errors}
-          register={register}
+          error={errors.description}
+          registration={register("description")}
           inputClassName="!py-2 !px-3 text-sm"
         />
       </div>

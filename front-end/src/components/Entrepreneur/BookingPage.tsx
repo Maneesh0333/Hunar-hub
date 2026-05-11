@@ -54,7 +54,7 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E] overflow-y-auto">
+    <div className="flex-1 flex flex-col space-y-6 bg-[#FAF5ED] text-[#2C1A0E]">
       <Header
         title="Booking & Requests"
         description={`${data?.totalBookings || 0} total bookings`}

@@ -11,6 +11,7 @@ import minutesToTime from "../utils/MinutesToTime.js";
 import timeToMinutes from "../utils/TimeToMinutes.js";
 import Review from "../models/Review.model.js";
 import Booking from "../models/Booking.model.js";
+import Portfolio from "../models/portfolio.model.js";
 
 export const getEntrepreneurProfile = asyncHandler(async (req, res) => {
   const { id } = req.user;
@@ -909,5 +910,56 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
         statusStats,
       },
     },
+  });
+});
+
+export const createUpdatePortfolio = asyncHandler(async (req, res) => {
+  const images = {};
+
+  Object.entries(req.files).forEach(([key, value]) => {
+    if (value?.[0]?.path) {
+      images[key] = value[0].path;
+    }
+  });
+
+  const portfolio = await Portfolio.findOneAndUpdate(
+    { entrepreneur: req.user.id },
+    {
+      $set: images,
+    },
+    {
+      new: true,
+      runValidators: true,
+      upsert: true,
+    },
+  );
+
+  res.status(201).json({
+    success: true,
+    message: "Portfolio created successfully",
+  });
+});
+
+export const getMyPortfolio = asyncHandler(async (req, res) => {
+  const portfolios = await Portfolio.findOne({
+    entrepreneur: req.user.id,
+  }).sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    message: "Portfolio fetched",
+    data: portfolios,
+  });
+});
+
+export const getMyEntrepreneurPortfolioById = asyncHandler(async (req, res) => {
+  const portfolios = await Portfolio.findOne({
+    entrepreneur: req.params.id,
+  }).sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    message: "Portfolio fetched",
+    data: portfolios,
   });
 });

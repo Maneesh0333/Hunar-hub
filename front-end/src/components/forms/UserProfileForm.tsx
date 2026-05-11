@@ -1,13 +1,11 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
-import { useEffect } from "react";
 
 import InputField from "../Shared/InputField";
 import Button from "../Shared/Button";
 import { useUpdateProfile, type Profile } from "../../hooks/User/useProfile ";
 import type { UserProfileFormValues } from "../../types/user/types";
 import { userProfileSchema } from "../../schema/user/user.schems";
-
 
 type Props = {
   profile: Profile | undefined;
@@ -20,23 +18,17 @@ export default function UserProfileForm({ profile, closeSheet }: Props) {
   const {
     handleSubmit,
     register,
-    reset,
     formState: { errors, isValid, isDirty, dirtyFields },
   } = useForm<UserProfileFormValues>({
     resolver: yupResolver(userProfileSchema),
     mode: "onChange",
+    values: {
+      name: profile?.name || "",
+      email: profile?.email || "",
+      phone: profile?.phone || "",
+      city: profile?.city ?? "",
+    },
   });
-
-  useEffect(() => {
-    if (profile) {
-      reset({
-        name: profile.name,
-        email: profile.email,
-        phone: profile.phone,
-        city: profile.city ?? "",
-      });
-    }
-  }, [profile, reset]);
 
   const onSubmit = (data: UserProfileFormValues) => {
     const updatedData = Object.fromEntries(
@@ -48,7 +40,6 @@ export default function UserProfileForm({ profile, closeSheet }: Props) {
     updateMutation.mutate(updatedData, {
       onSuccess: () => {
         closeSheet();
-        reset();
       },
     });
   };
@@ -64,37 +55,33 @@ export default function UserProfileForm({ profile, closeSheet }: Props) {
       >
         <InputField
           label="Name"
-          name="name"
           placeholder="Enter name"
-          register={register}
-          errors={errors}
+          registration={register("name")}
+          error={errors.name}
           inputClassName="!py-2 !px-3 text-sm"
         />
 
         <InputField
           label="Email"
-          name="email"
           placeholder="Enter email"
-          register={register}
-          errors={errors}
+          registration={register("email")}
+          error={errors.email}
           inputClassName="!py-2 !px-3 text-sm"
         />
 
         <InputField
           label="Phone"
-          name="phone"
           placeholder="Enter phone"
-          register={register}
-          errors={errors}
+          registration={register("phone")}
+          error={errors.phone}
           inputClassName="!py-2 !px-3 text-sm"
         />
 
         <InputField
           label="City"
-          name="city"
           placeholder="Enter city"
-          register={register}
-          errors={errors}
+          registration={register("city")}
+          error={errors.city}
           inputClassName="!py-2 !px-3 text-sm"
         />
       </div>

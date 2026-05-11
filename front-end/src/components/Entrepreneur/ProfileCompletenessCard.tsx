@@ -18,7 +18,7 @@ function ProfileCompletenessCard() {
     circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="bg-[#F5F1EC] rounded-2xl p-6 shadow-sm h-fit">
+    <div className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6 h-fit">
       <h2 className="font-serif text-lg font-bold mb-4">
         Profile Completeness
       </h2>

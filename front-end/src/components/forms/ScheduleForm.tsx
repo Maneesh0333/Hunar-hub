@@ -134,18 +134,16 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
             <InputField
               label="Start Time"
               type="time"
-              name="start"
-              register={register}
-              errors={errors}
+              registration={register("start")}
+              error={errors.start}
               inputClassName="!px-3 !py-2 text-sm"
             />
 
             <InputField
               label="End Time"
               type="time"
-              name="end"
-              register={register}
-              errors={errors}
+              registration={register("end")}
+              error={errors.end}
               inputClassName="!px-3 !py-2 text-sm"
             />
           </>

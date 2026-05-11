@@ -74,24 +74,6 @@ const sidebarNav: SidebarNavSection[] = [
   },
 
   {
-    title: "Insights",
-    items: [
-      {
-        id: "analytics",
-        icon: "📈",
-        label: "Analytics",
-        path: "/admin/analytics",
-      },
-      {
-        id: "reports",
-        icon: "📄",
-        label: "Reports",
-        path: "/admin/reports",
-      },
-    ],
-  },
-
-  {
     title: "System",
     items: [
       {
@@ -99,12 +81,6 @@ const sidebarNav: SidebarNavSection[] = [
         icon: "⚙️",
         label: "Settings",
         path: "/admin/settings",
-      },
-      {
-        id: "activity-logs",
-        icon: "🗒️",
-        label: "Activity Logs",
-        path: "/admin/activity-logs",
       },
     ],
   },
@@ -123,7 +99,7 @@ export default function Admin() {
   return (
     <div className="h-screen flex flex-col bg-[var(--cream)] font-sans text-[#2C1A0E]">
       {/* MAIN */}
-      <div className="flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden">
         <Sidebar sidebarNav={sidebarNav} />
 
         <div className="flex-1 flex flex-col p-6 overflow-y-auto bg-[#FAF5ED]">

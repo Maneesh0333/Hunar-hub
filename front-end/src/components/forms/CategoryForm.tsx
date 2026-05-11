@@ -8,10 +8,11 @@ import {
   useUpdateCategories,
   type Category,
 } from "../../hooks/Admin/useCategories";
-import { useEffect } from "react";
-import { createCategorySchema, updateCategorySchema } from "../../schema/admin/category.schema";
+import {
+  createCategorySchema,
+  updateCategorySchema,
+} from "../../schema/admin/category.schema";
 import type { CategoryFormType } from "../../types/admin/types";
-
 
 type Props = {
   category?: Category | null;
@@ -33,31 +34,13 @@ export default function CategoryForm({ category, closeSheet }: Props) {
       category ? updateCategorySchema : createCategorySchema,
     ),
     mode: "onChange",
-    defaultValues: {
-      icon: "",
-      name: "",
-      description: "",
-      status: "Active",
+    values: {
+      icon: category?.icon || "",
+      name: category?.name || "",
+      description: category?.description || "",
+      status: category?.status || "Active",
     },
   });
-
-  useEffect(() => {
-    if (category) {
-      reset({
-        icon: category.icon,
-        name: category.name,
-        description: category.description,
-        status: category.status,
-      });
-    } else {
-      reset({
-        icon: "",
-        name: "",
-        description: "",
-        status: "Active",
-      });
-    }
-  }, [category, reset]);
 
   const onSubmit = (data: CategoryFormType) => {
     if (category) {
@@ -96,27 +79,24 @@ export default function CategoryForm({ category, closeSheet }: Props) {
           label="Icon"
           placeholder="Paste a Emoji"
           inputClassName="!py-2 !px-3 text-sm"
-          name="icon"
-          errors={errors}
-          register={register}
+          error={errors.icon}
+          registration={register("icon")}
         />
 
         <InputField
           label="Category Name"
           placeholder="Enter category name"
           inputClassName="!py-2 !px-3 text-sm"
-          name="name"
-          errors={errors}
-          register={register}
+          error={errors.name}
+          registration={register("name")}
         />
 
         <InputField
           label="Description"
           placeholder="Enter a description"
           inputClassName="!py-2 !px-3 text-sm"
-          name="description"
-          errors={errors}
-          register={register}
+          error={errors.description}
+          registration={register("description")}
         />
 
         <Controller

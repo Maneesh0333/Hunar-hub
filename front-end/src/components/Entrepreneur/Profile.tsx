@@ -1,6 +1,5 @@
 import About from "../About";
 import ProfileHeader from "../ProfileHeader";
-import AchievementsCard from "./AchievementsCard";
 import BasicInformationCard from "./BasicInformationCard";
 import Header from "../Shared/Header";
 import ProfileCompletenessCard from "./ProfileCompletenessCard";
@@ -12,6 +11,7 @@ import Spinner from "../Shared/Spinner";
 import ErrorState from "../../pages/ErrorState";
 import NoInternet from "../../pages/NoInternet";
 import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
+import PortfolioSection from "./PortfolioSection";
 
 function Profile() {
   const [open, setOpen] = useState(false);
@@ -22,7 +22,7 @@ function Profile() {
     isFetching,
     refetch,
   } = useProfile();
-  
+
   const isOnline = useNetworkStatus();
 
   if (!isOnline) {
@@ -65,7 +65,7 @@ function Profile() {
             <BasicInformationCard data={profileData} />
             <div className="flex-1 space-y-5">
               <ProfileCompletenessCard />
-              <AchievementsCard />
+              <PortfolioSection page="Entrepreneur" EntrepreneurId="123"/>
             </div>
           </div>
         </div>

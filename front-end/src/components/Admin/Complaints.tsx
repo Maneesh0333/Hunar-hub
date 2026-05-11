@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Header from "../Shared/Header";
 import FilterChips from "../Shared/FilterChips";
 import SearchInput from "../Shared/SearchInput";
@@ -30,7 +30,10 @@ export default function Complaints() {
   );
 
   const complaints = data?.complaints ?? [];
-  const chips = getChips(data?.stats, data?.totalComplaints);
+  const chips = useMemo(
+    () => [...getChips(data?.stats, data?.totalComplaints)].reverse(),
+    [data?.stats, data?.totalComplaints],
+  );
 
   if (!isOnline) {
     return <NoInternet />;
@@ -61,7 +64,7 @@ export default function Complaints() {
         <>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <FilterChips
-              chips={chips.reverse()}
+              chips={chips}
               active={activeFilter}
               onChange={(value) => {
                 setActiveFilter(value);

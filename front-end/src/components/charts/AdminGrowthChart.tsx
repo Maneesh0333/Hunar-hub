@@ -7,9 +7,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
-import {
-  type GrowthData,
-} from "../../hooks/Admin/useAdminDashboard";
+import { type GrowthData } from "../../hooks/Admin/useAdminDashboard";
 
 /* ---------------- MONTH MAP ---------------- */
 const MONTHS = [
@@ -44,29 +42,31 @@ export default function AdminGrowthChart({
   /* ---------------- UI ---------------- */
 
   return (
-    <div className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6 h-[350px]">
+    <div className="bg-white rounded-2xl border border-[rgba(196,99,42,0.12)] p-6">
       <h2 className="font-semibold mb-1">User Growth</h2>
       <p className="text-xs text-[#6B4A2D] mb-6">Monthly user registrations</p>
 
-      <ResponsiveContainer width="100%" height="80%">
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" />
+      <div className="h-[350px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
 
-          <XAxis dataKey="name" />
-          <YAxis />
+            <XAxis dataKey="name" />
+            <YAxis />
 
-          <Tooltip />
+            <Tooltip />
 
-          <Line
-            type="monotone"
-            dataKey="users"
-            stroke="#C4632A"
-            strokeWidth={3}
-            dot={{ r: 4 }}
-            activeDot={{ r: 6 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+            <Line
+              type="monotone"
+              dataKey="users"
+              stroke="#C4632A"
+              strokeWidth={3}
+              dot={{ r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

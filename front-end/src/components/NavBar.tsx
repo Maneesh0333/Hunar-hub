@@ -149,6 +149,7 @@ export default function NavBar() {
           {user && (
             <Link
               to={"/user/chat"}
+              onClick={() => setMobileOpen(false)}
               state={{ openList: true }}
               className="w-9 h-9 flex items-center justify-center  border border-[rgba(196,99,42,0.12)] rounded-lg  bg-[var(--white)] hover:border-[var(--clay)] cursor-pointer"
             >
@@ -168,31 +169,31 @@ export default function NavBar() {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div
-          className="md:hidden border-t border-[rgba(196,99,42,0.12)]
-                     bg-[rgba(250,245,237,0.97)] px-6 py-4"
-        >
+        <div className="md:hidden relative">
           {user ? (
-            <div className="flex flex-col gap-3 text-[var(--earth)]">
+            <div className="absolute top-0 left-0 border-y border-[rgba(196,99,42,0.12)] bg-[rgba(250,245,237,0.97)] py-4 px-2 flex flex-col gap-2 w-full">
               <Link
                 to={"/user/profile"}
-                className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer text-left"
+                onClick={() => setMobileOpen(false)}
+                className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-2 rounded-lg cursor-pointer text-left"
               >
                 👤 My Profile
               </Link>
               <Link
                 to={"/user/orders"}
-                className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer text-left"
+                onClick={() => setMobileOpen(false)}
+                className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-2 rounded-lg cursor-pointer text-left"
               >
                 📦 My Orders
               </Link>
               <Link
                 to={"/user/wishlist"}
-                className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer text-left"
+                onClick={() => setMobileOpen(false)}
+                className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-2 rounded-lg cursor-pointer text-left"
               >
                 ❤️ Wishlist
               </Link>
-              <span className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer text-left">
+              <span className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-2 rounded-lg cursor-pointer text-left">
                 ⚙️ Settings
               </span>
               <button
@@ -213,7 +214,7 @@ export default function NavBar() {
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
+            <div className="absolute top-0 left-0 border-y border-[rgba(196,99,42,0.12)] bg-[rgba(250,245,237,0.97)] px-6 py-4 flex flex-col gap-4 w-full">
               <Link
                 to={"/auth"}
                 className="w-full px-4 py-2 border border-[var(--clay)] rounded-md text-sm font-medium text-[var(--clay)] hover:bg-[var(--clay)] hover:text-white"

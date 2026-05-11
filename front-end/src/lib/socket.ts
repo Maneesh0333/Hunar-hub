@@ -1,6 +1,14 @@
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
-export const socket = io("http://localhost:5000", {
+const URL = import.meta.env.VITE_BACKEND_URL;
+
+export const socket: Socket = io(URL, {
+  autoConnect: false,
   withCredentials: true,
-  // autoConnect: false, // important 👀
+
+  transports: ["websocket"],
+
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
 });

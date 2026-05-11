@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Header from "../Shared/Header";
 import FilterChips from "../Shared/FilterChips";
 import SearchInput from "../Shared/SearchInput";
@@ -32,7 +32,10 @@ export default function Users() {
   const unblockMutation = useUnblockUsers();
 
   const users = data?.users ?? [];
-  const chips = getChips(data?.stats, data?.totalUsers);
+  const chips = useMemo(
+    () => [...getChips(data?.stats, data?.totalUsers)].reverse(),
+    [data?.stats, data?.totalUsers],
+  );
 
   if (!isOnline) {
     return <NoInternet />;
@@ -62,7 +65,7 @@ export default function Users() {
         <>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <FilterChips
-              chips={chips.reverse()}
+              chips={chips}
               active={activeFilter}
               onChange={(value) => {
                 setActiveFilter(value);
@@ -104,7 +107,7 @@ export default function Users() {
           />
 
           <Pagination
-            page={data?.page ?? 1}
+            page={page}
             totalPages={data?.totalPages ?? 1}
             onPageChange={setPage}
           />

@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
-import { useEffect } from "react";
 
 import InputField from "../Shared/InputField";
 import SelectInput from "../Shared/SelectInput";
@@ -11,9 +10,11 @@ import {
   useUpdateServices,
   type Service,
 } from "../../hooks/Entrepreneur/useServices";
-import { createServiceSchema, updateServiceSchema } from "../../schema/admin/service.schema";
+import {
+  createServiceSchema,
+  updateServiceSchema,
+} from "../../schema/admin/service.schema";
 import type { ServiceFormType } from "../../types/admin/types";
-
 
 type Props = {
   service?: Service | null;
@@ -33,31 +34,13 @@ export default function ServiceForm({ service, closeSheet }: Props) {
   } = useForm({
     resolver: yupResolver(service ? updateServiceSchema : createServiceSchema),
     mode: "onChange",
-    defaultValues: {
-      title: "",
-      description: "",
-      price: 0,
-      priceUnit: "per_service",
+    values: {
+      title: service?.title || "",
+      description: service?.description || "",
+      price: service?.price || 0,
+      priceUnit: service?.priceUnit || "per_service",
     },
   });
-
-  useEffect(() => {
-    if (service) {
-      reset({
-        title: service.title,
-        description: service.description,
-        price: service.price,
-        priceUnit: service.priceUnit,
-      });
-    } else {
-      reset({
-        title: "",
-        description: "",
-        price: 0,
-        priceUnit: "per_service",
-      });
-    }
-  }, [service, reset]);
 
   const onSubmit = (data: ServiceFormType) => {
     if (service) {
@@ -96,18 +79,16 @@ export default function ServiceForm({ service, closeSheet }: Props) {
           label="Service Title"
           placeholder="Enter service title"
           inputClassName="!py-2 !px-3 text-sm"
-          name="title"
-          errors={errors}
-          register={register}
+          error={errors.title}
+          registration={register("title")}
         />
 
         <InputField
           label="Description"
           placeholder="Enter description"
           inputClassName="!py-2 !px-3 text-sm"
-          name="description"
-          errors={errors}
-          register={register}
+          error={errors.description}
+          registration={register("description")}
         />
 
         <Controller
@@ -133,9 +114,8 @@ export default function ServiceForm({ service, closeSheet }: Props) {
           placeholder="Enter price"
           type="number"
           inputClassName="!py-2 !px-3 text-sm"
-          name="price"
-          errors={errors}
-          register={register}
+          error={errors.price}
+          registration={register("price")}
         />
       </div>
 

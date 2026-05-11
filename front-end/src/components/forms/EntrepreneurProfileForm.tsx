@@ -1,7 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
-import { useEffect } from "react";
-
 import InputField from "../Shared/InputField";
 import Button from "../Shared/Button";
 
@@ -14,7 +12,6 @@ import SelectInput from "../Shared/SelectInput";
 import { useAllCategories } from "../../hooks/Admin/useCategories";
 import type { ProfileFormValues } from "../../types/entrepreneur/types";
 import { profileSchema } from "../../schema/entrepreneur/entrepreneurProfile.schema";
-
 
 type BaseProfilePayload = Partial<
   Omit<ProfileFormValues, "skills" | "languages">
@@ -42,30 +39,27 @@ export default function EntrepreneurProfileForm({
     formState: { errors, isValid, isDirty, dirtyFields },
   } = useForm<ProfileFormValues>({
     resolver: yupResolver(profileSchema),
+    values: {
+      name: profile?.user?.name || "",
+      email: profile?.user?.email || "",
+      phone: profile?.user?.phone || "",
+      bio: profile?.bio || "",
+      about: profile?.about || "",
+      city: profile?.user?.city || "",
+      category: profile?.category?._id || "",
+      languages: profile?.languages?.join(", ") || "",
+      skills: profile?.skills?.join(", ") || "",
+      experienceYears: profile?.experienceYears || 0,
+      payment: profile?.payment || [],
+      visitType: profile?.visitType || [],
+    },
     mode: "onChange",
   });
-
-  useEffect(() => {
-    reset({
-      name: profile?.user.name,
-      email: profile?.user.email,
-      phone: profile?.user.phone,
-      bio: profile?.bio ?? "",
-      about: profile?.about ?? "",
-      city: profile?.user.city ?? "",
-      category: profile?.category?._id ?? "",
-      languages: profile?.languages.toString() ?? "",
-      experienceYears: profile?.experienceYears ?? 0,
-      skills: profile?.skills.toString() ?? "",
-      payment: profile?.payment ?? [],
-      visitType: profile?.visitType ?? [],
-    });
-  }, [profile, reset]);
-
+  
   const onSubmit = (data: ProfileFormValues) => {
     const dirtyKeys = new Set(Object.keys(dirtyFields));
 
-    // 👇 build base object (WITHOUT skills & languages)
+    // build base object (WITHOUT skills & languages)
     const updatedData = Object.fromEntries(
       Object.entries(data).filter(
         ([key]) =>
@@ -73,7 +67,7 @@ export default function EntrepreneurProfileForm({
       ),
     ) as BaseProfilePayload;
 
-    // 👇 build final payload
+    // build final payload
     const payload: UpdateProfilePayload = {
       ...updatedData,
 
@@ -115,28 +109,25 @@ export default function EntrepreneurProfileForm({
       >
         <InputField
           label="Name"
-          name="name"
           placeholder="Enter name"
-          register={register}
-          errors={errors}
+          registration={register("name")}
+          error={errors.name}
           inputClassName="!py-2 !px-3 text-sm"
         />
 
         <InputField
           label="Email"
-          name="email"
           placeholder="Enter email"
-          register={register}
-          errors={errors}
+          registration={register("email")}
+          error={errors.email}
           inputClassName="!py-2 !px-3 text-sm"
         />
 
         <InputField
           label="Phone"
-          name="phone"
           placeholder="Enter phone"
-          register={register}
-          errors={errors}
+          registration={register("phone")}
+          error={errors.phone}
           inputClassName="!py-2 !px-3 text-sm"
         />
 
@@ -196,56 +187,50 @@ export default function EntrepreneurProfileForm({
 
         <InputField
           label="Bio"
-          name="bio"
           placeholder="Short bio"
-          register={register}
-          errors={errors}
+          registration={register("bio")}
+          error={errors.bio}
           inputClassName="!py-2 !px-3 text-sm"
         />
 
         <InputField
           label="About"
-          name="about"
           placeholder="About you"
-          register={register}
-          errors={errors}
+          registration={register("about")}
+          error={errors.about}
           inputClassName="!py-2 !px-3 text-sm"
         />
 
         <InputField
           label="Skills (comma separated)"
-          name="skills"
           placeholder="e.g Tailoring, Stitching (max 20 skills)"
-          register={register}
-          errors={errors}
+          registration={register("skills")}
+          error={errors.skills}
           inputClassName="!py-2 !px-3 text-sm"
         />
 
         <InputField
           label="Languages (comma separated)"
-          name="languages"
           placeholder="e.g English, Hindi (max 10 languages)"
-          register={register}
-          errors={errors}
+          registration={register("languages")}
+          error={errors.languages}
           inputClassName="!py-2 !px-3 text-sm"
         />
 
         <InputField
           label="City"
-          name="city"
           placeholder="Enter city"
-          register={register}
-          errors={errors}
+          registration={register("city")}
+          error={errors.city}
           inputClassName="!py-2 !px-3 text-sm"
         />
 
         <InputField
           label="Experience Years"
-          name="experienceYears"
           type="number"
           placeholder="Years of experience"
-          register={register}
-          errors={errors}
+          registration={register("experienceYears")}
+          error={errors.experienceYears}
           inputClassName="!py-2 !px-3 text-sm"
         />
       </div>

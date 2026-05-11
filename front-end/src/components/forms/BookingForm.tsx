@@ -8,7 +8,6 @@ import { useCreateBooking } from "../../hooks/User/useBooking";
 import type { bookingSchemaType } from "../../types/user/types";
 import { bookingSchema } from "../../schema/user/booking.schema";
 
-
 type Props = {
   servicesId: string | undefined;
   closeSheet: () => void;

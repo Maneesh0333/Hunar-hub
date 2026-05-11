@@ -110,10 +110,9 @@ export default function ReviewForm({ bookingId, closeSheet }: Props) {
           <InputField
             label="Write a review (optional)"
             placeholder="Share your experience..."
-            name="comment"
-            errors={errors}
+            error={errors.comment}
             inputClassName="!py-2 !px-3 text-sm"
-            register={register}
+            registration={register("comment")}
           />
         </div>
       </div>

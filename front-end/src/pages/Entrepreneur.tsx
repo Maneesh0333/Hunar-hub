@@ -93,12 +93,6 @@ const sidebarNav: SidebarNavSection[] = [
     title: "Account",
     items: [
       {
-        id: "analytics",
-        icon: "📈",
-        label: "Analytics",
-        path: "/entrepreneur/analytics",
-      },
-      {
         id: "settings",
         icon: "⚙️",
         label: "Settings",
