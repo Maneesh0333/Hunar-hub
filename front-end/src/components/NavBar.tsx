@@ -50,12 +50,12 @@ export default function NavBar() {
         {/* Desktop */}
         {user ? (
           <div className="hidden md:flex items-center gap-3">
-            <button className="w-fit h-9 border text-xs px-3 border-[rgba(196,99,42,0.12)] rounded-full bg-[var(--white)] hover:border-[var(--clay)] cursor-pointer">
+            {/* <button className="w-fit h-9 border text-xs px-3 border-[rgba(196,99,42,0.12)] rounded-full bg-[var(--white)] hover:border-[var(--clay)] cursor-pointer">
               📍 Hazratganj, Lucknow
             </button>
             <button className="w-9 h-9 border border-[rgba(196,99,42,0.12)] rounded-lg  bg-[var(--white)] hover:border-[var(--clay)] cursor-pointer">
               🔔
-            </button>
+            </button> */}
 
             <Link
               to={"/user/chat"}
@@ -96,9 +96,13 @@ export default function NavBar() {
                   >
                     ❤️ Wishlist
                   </Link>
-                  <span className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer">
+                  <Link
+                    to={"/user/settings"}
+                    onClick={() => setProfileOpen(false)}
+                    className="whitespace-nowrap hover:bg-gray-200 px-3 py-1 rounded-lg cursor-pointer"
+                  >
                     ⚙️ Settings
-                  </span>
+                  </Link>
                   <button
                     onClick={handleLogout}
                     disabled={logoutMutation.isPending}
@@ -193,9 +197,10 @@ export default function NavBar() {
               >
                 ❤️ Wishlist
               </Link>
-              <span className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-2 rounded-lg cursor-pointer text-left">
+
+              <Link to={"/user/settings"} onClick={() => setMobileOpen(false)} className="flex whitespace-nowrap hover:bg-gray-200 px-3 py-2 rounded-lg cursor-pointer text-left">
                 ⚙️ Settings
-              </span>
+              </Link>
               <button
                 onClick={handleLogout}
                 disabled={logoutMutation.isPending}

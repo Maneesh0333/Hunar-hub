@@ -101,7 +101,7 @@ export default function UserProfile() {
           </section>
 
           {/* Danger Zone */}
-          <section className="bg-white rounded-2xl border border-red-200 p-6">
+          {/* <section className="bg-white rounded-2xl border border-red-200 p-6">
             <h2 className="font-serif font-bold text-lg mb-3 text-red-600">
               🚨 Account
             </h2>
@@ -109,7 +109,7 @@ export default function UserProfile() {
             <button className="text-sm font-semibold text-red-600 hover:underline">
               Deactivate Account
             </button>
-          </section>
+          </section> */}
 
           <SideSheet
             open={open}
