@@ -4,7 +4,6 @@ import FilterChips from "../Shared/FilterChips";
 import SearchInput from "../Shared/SearchInput";
 import Table from "../Shared/Table";
 
-import { getChips } from "../../utils/EntrepreneurFilters";
 import { useAdminBookings } from "../../hooks/Admin/useBooking";
 import AdminBookingRow from "./AdminBookingRow";
 import Spinner from "../Shared/Spinner";
@@ -12,6 +11,7 @@ import ErrorState from "../../pages/ErrorState";
 import NoInternet from "../../pages/NoInternet";
 import { useNetworkStatus } from "../../hooks/Shared/useNetworkStatus";
 import Pagination from "../Shared/Pagination";
+import { getChips } from "../../utils/EntrepreneurFilters";
 
 export default function AdminBookingPage() {
   const [search, setSearch] = useState("");
