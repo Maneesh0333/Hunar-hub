@@ -21,11 +21,11 @@ export default function AdminBookingRow({ item }: Props) {
 
   return (
     <tr className="border-t border-[rgba(196,99,42,0.12)]">
-      {/* 👤 Customer */}
+      {/* Customer */}
       <td className="px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-            👤
+          <div className="w-10 h-10 bg-orange-100 text-lg shrink-0 font-semibold rounded-lg flex items-center justify-center">
+            {item.customer.name[0]?.toUpperCase()}
           </div>
           <div>
             <p className="font-medium">{item.customer.name}</p>

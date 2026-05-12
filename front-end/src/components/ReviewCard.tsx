@@ -10,8 +10,8 @@ function ReviewCard({review}: ReviewCardProps) {
   return (
     <div className="border-t border-[rgba(196,99,42,0.12)] pt-6">
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--khaki)] text-lg">
-          {review.avatar}
+        <div className="w-10 h-10 flex items-center shrink-0 font-semibold justify-center rounded-full bg-[var(--khaki)] text-lg">
+          {review?.name[0]?.toUpperCase()}
         </div>
 
         <div className="flex-1">

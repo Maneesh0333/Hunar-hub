@@ -15,8 +15,8 @@ export default function EarningRow({ item }: Props) {
       {/* 👤 Customer */}
       <td className="px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 font-semibold rounded-lg bg-orange-100 flex items-center justify-center text-lg">
-            {item?.customer?.name[0]}
+          <div className="w-10 h-10 shrink-0 font-semibold rounded-lg bg-orange-100 flex items-center justify-center text-lg">
+            {item?.customer?.name[0]?.toUpperCase()}
           </div>
           <p className="font-medium">{item.customer.name}</p>
         </div>

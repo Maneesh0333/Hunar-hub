@@ -7,7 +7,6 @@ import Spinner from "./Shared/Spinner";
 
 export type ReviewUI = {
   name: string;
-  avatar: string;
   rating: number;
   date: string;
   text: string;
@@ -55,7 +54,6 @@ export default function Reviews({
   // 🔹 Map API → UI format
   const reviews: ReviewUI[] = allReviews.map((r) => ({
     name: r.customer.name,
-    avatar: "👤", // replace later with real avatar
     rating: r.rating,
     date: new Date(r.createdAt).toLocaleDateString("en-IN", {
       day: "numeric",

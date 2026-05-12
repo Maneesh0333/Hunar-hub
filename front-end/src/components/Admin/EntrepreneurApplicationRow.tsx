@@ -26,8 +26,8 @@ export default function EntrepreneurApplicationRow({
     <tr className="border-t border-[var(--border-1)]">
       <td className="px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center text-lg">
-            👩
+          <div className="w-10 h-10 shrink-0 font-semibold rounded-lg bg-orange-100 flex items-center justify-center text-lg">
+            {item.user.name[0].toUpperCase()}
           </div>
 
           <div>
