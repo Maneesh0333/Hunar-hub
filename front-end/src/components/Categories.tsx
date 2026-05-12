@@ -30,7 +30,7 @@ export default function Categories() {
           className="inline-flex items-center gap-2 text-sm font-semibold
                      border border-[var(--clay)]/40
                      px-4 py-2 rounded-md text-[var(--clay)]
-                     hover:bg-[var(--clay)] hover:text-white transition"
+                     hover:bg-[var(--clay)] hover:text-white shrink-0 transition"
         >
           View All →
         </Link>
