@@ -33,11 +33,13 @@ export const preloadRoutes = (
       import("../pages/MyOrders.tsx");
       import("../pages/Wishlist.tsx");
       import("../components/Chat.tsx");
+      import("../components/Categories");
       break;
 
     default:
       import("../pages/AuthPage.tsx");
       import("../components/Search.tsx");
       import("../components/ProfilePage.tsx");
+      import("../components/Categories");
   }
 };

@@ -16,14 +16,6 @@ export default function FeaturedArtisans() {
   const entrepreneurs =
     data?.pages.flatMap((page) => page.data.entrepreneurs) || [];
 
-  if (isLoading) {
-    return (
-      <div className="min-h-60 flex items-center justify-center">
-        <Spinner />
-      </div>
-    );
-  }
-
   return (
     <section className="px-16 max-md:px-6 py-10 max-md:py-15 bg-[var(--cream)]">
       {/* Header */}
@@ -48,12 +40,21 @@ export default function FeaturedArtisans() {
         </Link>
       </div>
 
-      {/* Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {entrepreneurs.map((a) => (
-          <ArtisanCard key={a._id} artisan={a} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="min-h-60 flex items-center justify-center">
+          <Spinner />
+        </div>
+      ) : entrepreneurs.length > 0 ? (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {entrepreneurs.map((a) => (
+            <ArtisanCard key={a._id} artisan={a} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center min-h-60">
+          No Featured Artisans Yet
+        </div>
+      )}
     </section>
   );
 }

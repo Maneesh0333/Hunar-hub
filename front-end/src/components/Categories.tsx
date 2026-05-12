@@ -1,9 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAllCategories } from "../hooks/Admin/useCategories";
 import { useState } from "react";
+import Spinner from "./Shared/Spinner";
 
 export default function Categories() {
-  const { data: categories = [] } = useAllCategories();
+  const { data: categories = [], isLoading } = useAllCategories();
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
@@ -46,14 +47,18 @@ export default function Categories() {
         />
       </form>
 
-      {/* Categories Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-14">
-        {categories.map(({ icon, name, _id }) => (
-          <Link
-            to={"/search"}
-            state={{ category: _id }}
-            key={name}
-            className="group bg-white border border-[var(--clay)]/20
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-96">
+          <Spinner />
+        </div>
+      ) : categories.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-14">
+          {categories.map(({ icon, name, _id }) => (
+            <Link
+              to={"/search"}
+              state={{ category: _id }}
+              key={name}
+              className="group bg-white border border-[var(--clay)]/20
                        rounded-2xl px-4 py-6 text-center
                        transition cursor-pointer
                        hover:-translate-y-1
@@ -62,16 +67,21 @@ export default function Categories() {
                        hover:shadow-xl hover:shadow-[var(--clay)]/20
                        focus:outline-none
                        focus-visible:ring-2 focus-visible:ring-[var(--clay)]/40"
-          >
-            <span className="block text-4xl mb-3 transition group-hover:scale-110">
-              {icon}
-            </span>
-            <div className="text-sm font-semibold text-[var(--earth)]">
-              {name}
-            </div>
-          </Link>
-        ))}
-      </div>
+            >
+              <span className="block text-4xl mb-3 transition group-hover:scale-110">
+                {icon}
+              </span>
+              <div className="text-sm font-semibold text-[var(--earth)]">
+                {name}
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center min-h-60">
+          No categoryes Yet
+        </div>
+      )}
     </section>
   );
 }

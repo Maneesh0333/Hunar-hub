@@ -69,7 +69,7 @@ export const useCategories = (
   });
 };
 
-export const useAllCategories = (limit: number = 12) => {
+export const useAllCategories = (limit: number = 10) => {
   return useQuery<CategoryLite[]>({
     queryKey: ["categories-all", limit],
 
