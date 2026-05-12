@@ -12,6 +12,7 @@ import timeToMinutes from "../utils/TimeToMinutes.js";
 import Review from "../models/Review.model.js";
 import Booking from "../models/Booking.model.js";
 import Portfolio from "../models/portfolio.model.js";
+import cloudinary from "../config/cloudinary.js";
 
 export const getEntrepreneurProfile = asyncHandler(async (req, res) => {
   const { id } = req.user;
@@ -916,11 +917,17 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
 export const createUpdatePortfolio = asyncHandler(async (req, res) => {
   const images = {};
 
-  Object.entries(req.files).forEach(([key, value]) => {
-    if (value?.[0]?.path) {
-      images[key] = value[0].path;
-    }
-  });
+  for (const [key, value] of Object.entries(req.files)) {
+    const file = value?.[0];
+
+    if (!file?.path) continue;
+
+    const result = await cloudinary.uploader.upload(file.path, {
+      folder: "portfolio",
+    });
+
+    images[key] = result.secure_url;
+  }
 
   const portfolio = await Portfolio.findOneAndUpdate(
     { entrepreneur: req.user.id },
