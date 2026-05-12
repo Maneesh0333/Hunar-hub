@@ -1,8 +1,9 @@
-import Conversation from "../models/conversation.model.js";
+
 import Message from "../models/message.model.js";
 import { asyncHandler } from "../middleware/async.middleware.js";
 import AppError from "../utils/AppError.js";
 import mongoose from "mongoose";
+import Conversation from "../models/Conversation.model.js";
 
 export const createConversation = asyncHandler(async (req, res) => {
   const senderId = req.user.id;
