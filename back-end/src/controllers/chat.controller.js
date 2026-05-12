@@ -1,5 +1,5 @@
 
-import Message from "../models/message.model.js";
+import Message from "../models/Message.model.js";
 import { asyncHandler } from "../middleware/async.middleware.js";
 import AppError from "../utils/AppError.js";
 import mongoose from "mongoose";
