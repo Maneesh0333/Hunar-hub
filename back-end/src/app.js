@@ -36,6 +36,13 @@ app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 app.use(globalLimiter);
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "API is running 🚀",
+  });
+});
+app.get("/health", (req, res) => res.send("OK"));
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/entrepreneurs", entrepreneurRoutes);
