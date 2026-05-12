@@ -67,20 +67,22 @@ function Login() {
               registration={register("password")}
               error={errors.password}
             >
-              <div className="text-right mt-2">
+              {/* <div className="text-right mt-2">
                 <span className="text-xs text-[var(--clay)] cursor-pointer hover:underline">
                   Forgot password?
                 </span>
-              </div>
+              </div> */}
             </InputField>
 
             {/* Submit */}
-            <Button
-              type="submit"
-              isValid={isValid}
-              label="Sign In"
-              isLoading={loginMutation.isPending}
-            />
+            <div className="mt-10">
+              <Button
+                type="submit"
+                isValid={isValid}
+                label="Sign In"
+                isLoading={loginMutation.isPending}
+              />
+            </div>
           </form>
         </div>
       ) : (

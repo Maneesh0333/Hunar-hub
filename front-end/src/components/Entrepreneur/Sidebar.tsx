@@ -36,8 +36,8 @@ export default function Sidebar({ sidebarNav }: SidebarProps) {
           </div>
 
           <div className="flex items-center gap-3 bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.08)] px-2.5 py-3 rounded-2xl">
-            <div className="w-11 h-11 rounded-xl bg-[#C4632A] flex items-center justify-center text-lg">
-              🧑‍💼
+            <div className="w-11 h-11 font-semibold rounded-xl bg-[#C4632A] flex items-center justify-center text-lg">
+              {user?.name[0]}
             </div>
 
             <div>
