@@ -121,4 +121,5 @@ EMAIL_PASS=your_email_password
 
 
 # 🎥 Demo
-https://github.com/user-attachments/assets/a9e996bd-e663-4c32-a23f-b5501bb330d5
+https://github.com/user-attachments/assets/359ab2a9-0dbd-4359-b1d4-4136d2e4bac2
+
