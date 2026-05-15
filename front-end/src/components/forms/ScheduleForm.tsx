@@ -3,16 +3,17 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import InputField from "../Shared/InputField";
 import SelectInput from "../Shared/SelectInput";
 import Button from "../Shared/Button";
-import { useEffect } from "react";
 
 import {
   useCreateSchedule,
   useUpdateSchedule,
   type Schedule,
 } from "../../hooks/Entrepreneur/useSchedule";
-import { createScheduleSchema, updateScheduleSchema } from "../../schema/entrepreneur/schedule.schema";
+import {
+  createScheduleSchema,
+  updateScheduleSchema,
+} from "../../schema/entrepreneur/schedule.schema";
 import type { FormType } from "../../types/entrepreneur/types";
-
 
 // Days
 const dayOptions = [
@@ -45,10 +46,11 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
       schedule ? updateScheduleSchema : createScheduleSchema,
     ),
     mode: "onChange",
-    defaultValues: {
-      working: true,
-      start: "09:00",
-      end: "17:00",
+    values: {
+      day: schedule?.day || "",
+      working: schedule?.working || true,
+      start: schedule?.start || "09:00",
+      end: schedule?.end || "17:00",
     },
   });
 
@@ -56,23 +58,6 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
     control,
     name: "working",
   });
-
-  useEffect(() => {
-    if (schedule) {
-      reset({
-        day: schedule.day,
-        working: schedule.working,
-        start: schedule.start,
-        end: schedule.end,
-      });
-    } else {
-      reset({
-        working: true,
-        start: "09:00",
-        end: "17:00",
-      });
-    }
-  }, [schedule, reset]);
 
   const onSubmit = (data: FormType) => {
     if (schedule) {
@@ -155,9 +140,9 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
         label={schedule ? "Update Schedule" : "Add Schedule"}
         className="w-full"
         disabled={
-          !isValid || !isDirty || schedule
-            ? updateMutation.isPending
-            : createMutation.isPending
+          !isValid ||
+          !isDirty ||
+          (schedule ? updateMutation.isPending : createMutation.isPending)
         }
         isLoading={
           schedule ? updateMutation.isPending : createMutation.isPending

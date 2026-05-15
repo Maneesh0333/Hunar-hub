@@ -35,7 +35,6 @@ export default function EntrepreneurProfileForm({
     handleSubmit,
     register,
     control,
-    reset,
     formState: { errors, isValid, isDirty, dirtyFields },
   } = useForm<ProfileFormValues>({
     resolver: yupResolver(profileSchema),
@@ -93,7 +92,6 @@ export default function EntrepreneurProfileForm({
     updateMutation.mutate(payload, {
       onSuccess: () => {
         closeSheet();
-        reset();
       },
     });
   };
