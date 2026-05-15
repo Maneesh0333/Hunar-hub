@@ -128,6 +128,7 @@ export default function Schedule() {
         }
       >
         <ScheduleForm
+          key={open ? "open" : "close"}
           schedule={selectedSchedule}
           closeSheet={() => setOpen(false)}
         />

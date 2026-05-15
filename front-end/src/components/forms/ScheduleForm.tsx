@@ -27,7 +27,7 @@ const dayOptions = [
 ];
 
 type Props = {
-  schedule?: Schedule | null;
+  schedule: Schedule | null;
   closeSheet: () => void;
 };
 
@@ -47,7 +47,7 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
     ),
     values: {
       day: schedule?.day || "",
-      working: schedule?.working || true,
+      working: schedule?.working || false,
       start: schedule?.start || "09:00",
       end: schedule?.end || "17:00",
     },
@@ -119,8 +119,8 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
               <label className="text-sm font-medium">Working Day</label>
               <input
                 type="checkbox"
-                checked={field.value} 
-                onChange={(e) => field.onChange(e.target.checked)} 
+                checked={field.value}
+                onChange={(e) => field.onChange(e.target.checked)}
                 onBlur={field.onBlur}
               />
             </div>
