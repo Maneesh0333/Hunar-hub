@@ -45,14 +45,16 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
     resolver: yupResolver(
       schedule ? updateScheduleSchema : createScheduleSchema,
     ),
-    mode: "onChange",
     values: {
       day: schedule?.day || "",
       working: schedule?.working || true,
       start: schedule?.start || "09:00",
       end: schedule?.end || "17:00",
     },
+    mode: "onChange",
   });
+
+  console.log(schedule);
 
   const working = useWatch({
     control,
@@ -109,10 +111,21 @@ export default function ScheduleForm({ schedule, closeSheet }: Props) {
           )}
         />
 
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Working Day</label>
-          <input type="checkbox" {...register("working")} />
-        </div>
+        <Controller
+          name="working"
+          control={control}
+          render={({ field }) => (
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Working Day</label>
+              <input
+                type="checkbox"
+                checked={field.value} 
+                onChange={(e) => field.onChange(e.target.checked)} 
+                onBlur={field.onBlur}
+              />
+            </div>
+          )}
+        />
 
         {working && (
           <>

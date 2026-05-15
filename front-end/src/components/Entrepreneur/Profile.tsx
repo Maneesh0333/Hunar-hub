@@ -78,6 +78,7 @@ function Profile() {
         onClose={() => setOpen(false)}
       >
         <EntrepreneurProfileForm
+          key={open ? "open": "close"}
           profile={profileData}
           closeSheet={() => setOpen(false)}
         />
