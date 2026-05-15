@@ -58,7 +58,7 @@ function Verify({ setCurrentStep, email, goto, setPage }: VerifyProps) {
           Verify your Email
         </h3>
         <p className="text-sm text-[var(--earth-mid)]">
-          We sent a 6-digit code to the registered email.
+          We sent a 6-digit code to the registered email. <span className="font-bold">For now use 000000 as your OTP</span>
         </p>
       </div>
 
