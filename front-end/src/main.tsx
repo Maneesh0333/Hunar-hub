@@ -1,3 +1,4 @@
+import { HelmetProvider } from "react-helmet-async";
 import { StrictMode, Suspense, lazy } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
@@ -172,10 +173,12 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AppInit />
-      <RouterProvider router={router} />
-      <Toaster position="bottom-right" reverseOrder={false} />
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <AppInit />
+        <RouterProvider router={router} />
+        <Toaster position="bottom-right" reverseOrder={false} />
+      </QueryClientProvider>
+    </HelmetProvider>
   </StrictMode>,
 );

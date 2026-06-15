@@ -6,6 +6,7 @@ import Spinner from "../components/Shared/Spinner";
 import AboutUs from "../components/User/AboutUs";
 import HowItWorks from "../components/HowItWorks";
 import Testimonials from "../components/Testimonials";
+import SEO from "../components/Shared/SEO";
 
 const Categories = lazy(() => import("../components/Categories"));
 const FeaturedArtisans = lazy(() => import("../components/FeaturedArtisans"));
@@ -13,6 +14,11 @@ const FeaturedArtisans = lazy(() => import("../components/FeaturedArtisans"));
 function Home() {
   return (
     <>
+      <SEO
+        title="HunarHub | Find Trusted Local Professionals."
+        description="Find and book trusted electricians, plumbers, carpenters, painters, and other skilled professionals near you through HunarHub."
+        url="https://hunar-hub-web.vercel.app/home"
+      />
       <NavBar />
       <Hero />
 

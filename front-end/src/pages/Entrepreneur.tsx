@@ -4,6 +4,7 @@ import { useSideBar } from "../stores/sideBarStore";
 import { Sidebar as SidebarIcon } from "lucide-react";
 import { useMediaQuery } from "react-responsive";
 import { useEffect } from "react";
+import SEO from "../components/Shared/SEO";
 
 export type SidebarProfile = {
   name: string;
@@ -113,20 +114,27 @@ export default function Entrepreneur() {
   }, [isMobile, init]);
 
   return (
-    <div className="h-screen flex flex-col bg-[var(--cream)] font-sans text-[#2C1A0E]">
-      {/* MAIN */}
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar sidebarNav={sidebarNav} />
-        <div className="flex-1 flex flex-col p-6 overflow-y-auto">
-          <button
-            onClick={() => setOpen()}
-            className="text-black p-2 w-fit z-10 bg-[var(--color-white)] text-[#6B4A2D] border border-[rgba(196,99,42,0.12)] cursor-pointer rounded-xl mb-2"
-          >
-            <SidebarIcon size={18} />
-          </button>
-          <Outlet />
+    <>
+      <SEO
+        title="Entrepreneur Dashboard"
+        description="Manage services and bookings."
+        noIndex
+      />
+      <div className="h-screen flex flex-col bg-[var(--cream)] font-sans text-[#2C1A0E]">
+        {/* MAIN */}
+        <div className="flex-1 flex overflow-hidden">
+          <Sidebar sidebarNav={sidebarNav} />
+          <div className="flex-1 flex flex-col p-6 overflow-y-auto">
+            <button
+              onClick={() => setOpen()}
+              className="text-black p-2 w-fit z-10 bg-[var(--color-white)] text-[#6B4A2D] border border-[rgba(196,99,42,0.12)] cursor-pointer rounded-xl mb-2"
+            >
+              <SidebarIcon size={18} />
+            </button>
+            <Outlet />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
