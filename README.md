@@ -119,6 +119,7 @@ EMAIL_PASS=your_email_password
 - Revenue overview
 - Booking income records
 
+# 📸 Screenshots
 
 # 🎥 Demo
 https://github.com/user-attachments/assets/359ab2a9-0dbd-4359-b1d4-4136d2e4bac2
