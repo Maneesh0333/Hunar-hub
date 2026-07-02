@@ -121,6 +121,20 @@ EMAIL_PASS=your_email_password
 
 # 📸 Screenshots
 
+## User
+<img width="1351" height="630" alt="Screenshot 2026-07-02 234910" src="https://github.com/user-attachments/assets/2528bb40-2f13-4516-890d-d7531b301f8d" />
+<img width="1350" height="631" alt="Screenshot 2026-07-02 234947" src="https://github.com/user-attachments/assets/d710d571-2dc5-454f-9aa6-785dc991e584" />
+
+
+## Admin
+<img width="1351" height="632" alt="Screenshot 2026-07-02 235256" src="https://github.com/user-attachments/assets/c18c34fa-0831-41ff-a6b9-4adca6310536" />
+<img width="1350" height="630" alt="Screenshot 2026-07-02 235342" src="https://github.com/user-attachments/assets/85558410-9d17-4fbc-8a8f-78c017f3663e" />
+
+
+## Entrepreneur
+<img width="1344" height="632" alt="Screenshot 2026-07-02 235122" src="https://github.com/user-attachments/assets/3323dc49-bc76-4e97-adae-9ae407416235" />
+<img width="1348" height="630" alt="Screenshot 2026-07-02 235206" src="https://github.com/user-attachments/assets/847bab7e-7d3d-40f9-bc14-cf31633787be" />
+
 # 🎥 Demo
 https://github.com/user-attachments/assets/359ab2a9-0dbd-4359-b1d4-4136d2e4bac2
 
